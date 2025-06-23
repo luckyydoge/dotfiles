@@ -1,3 +1,10 @@
 [user]
 	email = zjw000107@gmail.com
 	name = zjw
+[safe]
+	directory = /mnt/usb/dotfiles.git
+[alias]
+	st = status
+	cm = commit -m
+[color]
+	ui = auto
