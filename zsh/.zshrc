@@ -26,7 +26,17 @@ export HTTPS_PROXY="$http_proxy"
 export ALL_PROXY="socks5://127.0.0.1:10800"
 # export http_proxy=""
 # export https_proxy=""
-# export all_proxy="socks5://127.0.0.1:10800"
+# export all_proxy=""
 # export HTTP_PROXY=""
 # export HTTPS_PROXY=""
-# export ALL_PROXY="$all_proxy"
+# export ALL_PROXY=""
+#
+
+source ./.fzf.zsh
+
+# export DISPLAY=:12
+export XMODIFIERS=@im=fcitx
+export QT_IM_MODULE=fcitx
+export GTK_IM_MODULE=fcitx
+
+export PATH="$HOME/.scripts:$PATH"
