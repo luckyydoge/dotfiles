@@ -38,5 +38,7 @@ source ./.fzf.zsh
 export XMODIFIERS=@im=fcitx
 export QT_IM_MODULE=fcitx
 export GTK_IM_MODULE=fcitx
+export DISPLAY=:0
 
 export PATH="$HOME/.scripts:$PATH"
+eval "$(direnv hook zsh)"

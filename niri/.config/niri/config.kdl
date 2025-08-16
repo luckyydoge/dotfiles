@@ -257,10 +257,10 @@ layout {
 // This line starts waybar, a commonly used bar for Wayland compositors.
 spawn-at-startup "waybar"
 spawn-at-startup "footclient"
-// spawn-at-startup "xwayland-satellite :12"
+spawn-at-startup "xwayland-satellite"
 
 environment {
-	Display ":12"
+	DISPLAY ":0"
 }
 
 cursor {
