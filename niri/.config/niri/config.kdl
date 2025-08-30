@@ -258,9 +258,11 @@ layout {
 spawn-at-startup "waybar"
 spawn-at-startup "footclient"
 spawn-at-startup "xwayland-satellite"
+spawn-at-startup "udiskie"
 
 environment {
-	DISPLAY ":0"
+    DISPLAY ":0"
+    ELECTRON_OZONE_PLATFORM_HINT "auto"
 }
 
 cursor {
