@@ -12,11 +12,17 @@ compinit
 # End of lines added by compinstall
 source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+
 alias ll='ls -lh'
 alias lla='ls -alh'
+alias lg='lazygit'
+alias vim='nvim'
+alias nv='nvim'
+
 eval "$(starship init zsh)"
 
 export KEYTIMEOUT=5
+export EDITOR=nvim
 
 export http_proxy="http://127.0.0.1:10801"
 export https_proxy="$http_proxy"
