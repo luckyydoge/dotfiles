@@ -1,99 +1,122 @@
-archlinuxcn-keyring
-base
-base-devel
-bat
-bottom
-brightnessctl
-btop
-btrfs-progs
-efibootmgr
-exfatprogs
-eza
-fastfetch
-fcitx5
-fcitx5-chinese-addons
-fcitx5-configtool
-fcitx5-gtk
-fcitx5-qt
-fcitx5-rime
-fd
-firefox
-firefox-tridactyl
-foot
-fuzzel
-fzf
-gammastep
-gcc
-git
-greetd
-greetd-tuigreet
-grub
-gst-libav
-gst-plugins-bad
-gst-plugins-base
-gst-plugins-good
-gst-plugins-ugly
-hyprland
-intellij-idea-ultimate-edition
-iwd
-jdk21-openjdk
-jdk8-openjdk
-keyd
-kitty
-lazygit
-libreoffice-still-zh-cn
-librewolf
-linux
-linux-firmware
-lsd
-lshw
-luakit
-ly
-lynx
-mako
-man-db
-maven
-neovim
-nerd-fonts-fontconfig
-niri
-nodejs
-noto-fonts
-noto-fonts-cjk
-noto-fonts-emoji
-npm
-nyxt
-openssh
-pacman-contrib
-paru
-paru-debug
-podman
-podman-compose
-qutebrowser
-ripgrep
-s-tui
-starship
-stow
-strace
-sudo
-swayidle
-tmux
-tree
-ttf-fira-code
-ttf-firacode-nerd
-ttf-iosevka
-ttf-lxgw-wenkai
-ttf-lxgw-wenkai-mono
-ttf-nerd-fonts-symbols
-unzip
-vim
-waybar
-wl-clipboard
-wqy-zenhei
-xorg-xeyes
-xray
-xwayland-satellite
-yazi
-zsh
-zsh-autosuggestions
-zsh-completions
-zsh-syntax-highlighting
+7zip 25.01-1
+archlinuxcn-keyring 20250531-1
+base 3-2
+base-devel 1-2
+bat 0.25.0-4
+bottom 0.11.1-1
+bridge-utils 1.7.1-2
+brightnessctl 0.5.1-3
+btop 1.4.4-1
+btrfs-progs 6.16-1
+code 1.103.1-1
+dbeaver 25.1.5-1
+direnv 2.37.1-1
+distrobox 1.8.1.2-1
+dnsmasq 2.91-1
+efibootmgr 18-3
+exfatprogs 1.2.9-1
+eza 0.23.0-1
+fastfetch 2.51.1-1
+fcitx5 5.1.14-1
+fcitx5-chinese-addons 5.1.9-1
+fcitx5-configtool 5.1.10-1
+fcitx5-gtk 5.1.4-1
+fcitx5-qt 5.1.10-1
+fcitx5-rime 5.1.11-1
+fd 10.3.0-1
+feishu-bin 7.46.12-1
+firefox 142.0.1-1
+firefox-tridactyl 1.24.4-1
+foot 1.23.1-1
+fuzzel 1.13.1-1
+fzf 0.65.1-1
+gammastep 2.0.11-1
+gcc 15.2.1+r22+gc4e96a094636-1
+git 2.51.0-1
+go 2:1.24.6-1
+greetd 0.10.3-1
+greetd-tuigreet 0.9.1-1
+grub 2:2.12.r292.g73d1c959-1
+gst-libav 1.26.5-2
+gst-plugins-bad 1.26.5-2
+gst-plugins-base 1.26.5-2
+gst-plugins-good 1.26.5-2
+gst-plugins-ugly 1.26.5-2
+intellij-idea-ultimate-edition 2025.2.1-1
+iwd 3.9-1
+jdk21-openjdk 21.0.8.u9-1
+jdk8-openjdk 8.462.u08-1
+keyd 2.5.0-1
+lazygit 0.54.2-1
+libreoffice-still-zh-cn 25.2.5-1
+librewolf 2:142.0.1_1-1
+libvirt 1:11.6.0-1
+linux 6.16.4.arch1-1
+linux-firmware 20250808-1
+linuxqq 5:3.2.19_38960-1
+lsd 1.1.5-1
+lshw B.02.20-1
+ly 1.1.2-1
+lynx 2.9.2-2
+mako 1.10.0-1
+man-db 2.13.1-1
+maven 3.9.11-1
+mpv 1:0.40.0-5
+neomutt 20250510-2
+neovim 0.11.3-1
+nerd-fonts-fontconfig 1.0.1-3
+niri 25.05.1-2
+nodejs 24.7.0-1
+noto-fonts 1:2025.08.01-1
+noto-fonts-cjk 20240730-1
+noto-fonts-emoji 1:2.048-1
+npm 11.5.2-1
+obs-studio 31.1.2-1
+openssh 10.0p1-4
+pacman-contrib 1.13.0-1
+paru 2.1.0-1
+paru-debug 2.1.0-1
+pavucontrol 1:6.1-1
+pipewire-alsa 1:1.4.7-1
+pipewire-jack 1:1.4.7-1
+pipewire-pulse 1:1.4.7-1
+podman 5.6.0-1
+podman-compose 1.5.0-1
+qemu-base 10.0.3-1
+qt5ct 1.9-1
+qutebrowser 3.5.1-2
+ripgrep 14.1.1-1
+s-tui 1.2.0-1
+starship 1.23.0-1
+stow 2.4.1-1
+strace 6.16-1
+sudo 1.9.17.p1-1
+swayidle 1.8.0-2
+tmux 3.5_a-1
+tree 2.2.1-1
+ttf-fira-code 6.2-2
+ttf-firacode-nerd 3.4.0-1
+ttf-iosevka 33.2.8-1
+ttf-lxgw-wenkai 1.520-2
+ttf-lxgw-wenkai-mono 1.520-2
+ttf-nerd-fonts-symbols 3.4.0-1
+udiskie 2.5.7-1
+udisks2 2.10.1-6
+unzip 6.0-23
+vim 9.1.1623-1
+virt-manager 5.1.0-1
+waybar 0.14.0-1
+wireplumber 0.5.10-1
+wl-clipboard 1:2.2.1-3
+wqy-zenhei 0.9.45-10
+xorg-xeyes 1.3.1-1
+xray 25.8.3-1
+xwayland-satellite 0.7-1
+yazi 25.5.31-2
+zathura 0.5.12-1
+zathura-pdf-poppler 0.3.3-5
+zen-browser 1.14.5b-1
+zsh 5.9-5
+zsh-autosuggestions 0.7.1-1
+zsh-completions 0.35.0-3
+zsh-syntax-highlighting 0.8.0-1
