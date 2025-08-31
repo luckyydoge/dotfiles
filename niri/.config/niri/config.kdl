@@ -157,7 +157,7 @@ layout {
         // off
 
         // How many logical pixels the ring extends out from the windows.
-        width 2
+        width 4
 
         // Colors can be set in a variety of ways:
         // - CSS named colors: "red"
@@ -270,8 +270,10 @@ environment {
 }
 
 cursor {
-	hide-when-typing
-	hide-after-inactive-ms 5000
+    hide-when-typing
+    hide-after-inactive-ms 5000
+    xcursor-theme "Cosmic"
+    xcursor-size 60
 }
 
 
