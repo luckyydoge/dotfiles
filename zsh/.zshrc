@@ -13,11 +13,14 @@ compinit
 source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 
+alias ls='eza'
 alias ll='ls -lh'
 alias lla='ls -alh'
 alias lg='lazygit'
 alias vim='nvim'
 alias nv='nvim'
+
+alias cd='z'
 
 eval "$(starship init zsh)"
 
@@ -30,6 +33,7 @@ export all_proxy="socks5://127.0.0.1:10800"
 export HTTP_PROXY="http://127.0.0.1:10801"
 export HTTPS_PROXY="$http_proxy"
 export ALL_PROXY="socks5://127.0.0.1:10800"
+export no_proxy="localhost,127.0.0.1,docker.internal,192.168.49.2"
 # export http_proxy=""
 # export https_proxy=""
 # export all_proxy=""
@@ -45,8 +49,13 @@ export XMODIFIERS=@im=fcitx
 export QT_IM_MODULE=fcitx
 export GTK_IM_MODULE=fcitx
 export DISPLAY=:0
+export XCURSOR_SIZE=48
 
 export PATH="$HOME/.scripts:$PATH"
+export PATH="$HOME/stow/qemu-10.1.0/build/:$PATH"
+export PATH="$HOME/stow/qemu-10.1.0/build/riscv64-softmmu:$PATH"
+export PATH="$HOME/stow/qemu-10.1.0/build/riscv64-linux-user:$PATH"
+
 eval "$(direnv hook zsh)"
 eval "$(zoxide init zsh)"
 function y() {
