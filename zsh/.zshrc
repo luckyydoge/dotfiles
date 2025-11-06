@@ -52,12 +52,10 @@ export DISPLAY=:0
 export XCURSOR_SIZE=48
 
 export PATH="$HOME/.scripts:$PATH"
-export PATH="$HOME/stow/qemu-10.1.0/build/:$PATH"
-export PATH="$HOME/stow/qemu-10.1.0/build/riscv64-softmmu:$PATH"
-export PATH="$HOME/stow/qemu-10.1.0/build/riscv64-linux-user:$PATH"
 
 eval "$(direnv hook zsh)"
 eval "$(zoxide init zsh)"
+eval "$(fnm env --use-on-cd)"
 function y() {
 	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
 	yazi "$@" --cwd-file="$tmp"

@@ -41,3 +41,7 @@ vim.o.cursorline = true
 vim.o.scrolloff = 3
 
 vim.o.confirm = true
+
+vim.wo.foldmethod = 'expr'
+vim.wo.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
+vim.opt.foldlevel = 2

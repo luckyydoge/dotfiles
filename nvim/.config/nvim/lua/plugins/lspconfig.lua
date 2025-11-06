@@ -196,18 +196,19 @@ return {
     --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
     local servers = {
       clangd = {},
-      bashls = {},
-      jdtls = {},
-      gopls = {},
-      pyright = {},
+      -- bashls = {},
+      -- jdtls = {},
+      -- gopls = {},
+      -- pyright = {},
       rust_analyzer = {},
+      tinymist = {},
       -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
       --
       -- Some languages (like typescript) have entire language plugins that can be useful:
       --    https://github.com/pmizio/typescript-tools.nvim
       --
       -- But for many setups, the LSP (`ts_ls`) will work just fine
-      ts_ls = {},
+      -- ts_ls = {},
       --
 
       lua_ls = {
@@ -225,13 +226,13 @@ return {
         },
       },
     }
-    require('java').setup {
-      -- Your custom jdtls settings goes here
-    }
+    -- require('java').setup {
+    -- Your custom jdtls settings goes here
+    -- }
 
-    require('lspconfig').jdtls.setup {
-      -- Your custom nvim-java configuration goes here
-    }
+    -- require('lspconfig').jdtls.setup {
+    -- Your custom nvim-java configuration goes here
+    -- }
 
     -- Ensure the servers and tools above are installed
     --
@@ -249,6 +250,7 @@ return {
     local ensure_installed = vim.tbl_keys(servers or {})
     vim.list_extend(ensure_installed, {
       'stylua', -- Used to format Lua code
+      'markdownlint-cli2',
     })
     require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 

@@ -8,3 +8,11 @@ vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left wind
 vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+
+-- 切换到下一个 Tab（替代默认的 gt，更直观）
+-- vim.keymap.set('n', '<leader>tl', 'gt', { desc = 'Go to next tab' })
+-- 切换到上一个 Tab（替代默认的 gT）
+-- vim.keymap.set('n', '<leader>th', 'gT', { desc = 'Go to previous tab' })
+-- 关闭当前 Tab（替代 :tabclose）
+vim.keymap.set('n', '<leader>tc', ':tabclose<CR>', { desc = 'Close current tab' })
+vim.keymap.set('n', '<leader>tn', ':tabnew<CR>', { desc = 'Create a new tab' })
