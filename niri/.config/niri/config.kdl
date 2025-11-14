@@ -28,7 +28,7 @@ input {
         tap
         // dwt
         // dwtp
-        // drag false
+        drag true
         // drag-lock
         natural-scroll
         // accel-speed 0.2
@@ -80,6 +80,7 @@ output "eDP-1" {
     // If the mode is omitted altogether or is invalid, niri will pick one automatically.
     // Run `niri msg outputs` while inside a niri instance to list all outputs and their modes.
     mode "2880x1800@120.000"
+    variable-refresh-rate
 
     // You can use integer or fractional scale, for example use 1.5 for 150% scale.
     scale 1.5
@@ -105,7 +106,7 @@ output "eDP-1" {
 // https://github.com/YaLTeR/niri/wiki/Configuration:-Layout
 layout {
     // Set gaps around windows in logical pixels.
-    gaps 5
+    gaps 3
 
     // When to center a column when changing focus, options are:
     // - "never", default behavior, focusing an off-screen column will keep at the left
@@ -259,12 +260,12 @@ layout {
 // See the binds section below for more spawn examples.
 
 // This line starts waybar, a commonly used bar for Wayland compositors.
-spawn-at-startup "waybar"
+// spawn-at-startup "waybar"
 // spawn-at-startup "footclient"
 // spawn-at-startup "xwayland-satellite"
 spawn-at-startup "udiskie"
 spawn-at-startup "easyeffects" "--gapplication-service"
-spawn-at-startup "swaybg" "-i" "./wallpapers/bg"
+spawn-sh-at-startup "swaybg -i $HOME/.config/niri/wallpapers/bg"
 spawn-at-startup "swww-daemon"
 
 environment {
@@ -280,7 +281,7 @@ environment {
 
 cursor {
     hide-when-typing
-    hide-after-inactive-ms 5000
+    hide-after-inactive-ms 3000
     xcursor-theme "Cosmic"
     xcursor-size 60
 }
@@ -311,6 +312,9 @@ animations {
 
     // Slow down all animations by this factor. Values below 1 speed them up instead.
     // slowdown 3.0
+    workspace-switch {
+        off
+    }
 }
 
 // Window rules let you adjust behavior for individual windows.
@@ -333,13 +337,14 @@ window-rule {
     // - host Firefox (app-id is "firefox")
     // - Flatpak Firefox (app-id is "org.mozilla.firefox")
     match app-id=r#"firefox$"# title="^Picture-in-Picture$"
+    match app-id="zen" title="^Library$"
     open-floating true
 }
 
 window-rule {
     match app-id="wechat"
     match app-id="easy effects"
-    match app-id="zen-browser"
+    match app-id="QQ"
     open-focused false
     open-floating true
 }
@@ -394,6 +399,8 @@ binds {
     Mod+D hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
     Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn-sh "niri msg action power-off-monitors && swaylock -i $HOME/.config/niri/wallpapers/lock"; }
     Mod+Return { spawn "footclient"; }
+    Mod+B { spawn-sh "killall waybar || waybar"; }
+    Mod+Shift+T { spawn "~/.scripts/status.sh"; }
 
     // You can also use a shell. Do this if you need pipes, multiple commands, etc.
     // Note: the entire command goes as a single argument in the end.
@@ -403,6 +410,8 @@ binds {
     // The allow-when-locked=true property makes them work even when the session is locked.
     XF86AudioRaiseVolume allow-when-locked=true { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "0.01+"; }
     XF86AudioLowerVolume allow-when-locked=true { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "0.01-"; }
+    Shift+XF86AudioRaiseVolume allow-when-locked=true { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "0.1+"; }
+    Shift+XF86AudioLowerVolume allow-when-locked=true { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "0.1-"; }
     XF86AudioMute        allow-when-locked=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SINK@" "toggle"; }
     XF86AudioMicMute     allow-when-locked=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SOURCE@" "toggle"; }
     XF86MonBrightnessUp allow-when-locked=true { spawn "brightnessctl" "s" "+5%";}
@@ -552,7 +561,7 @@ binds {
     // Mod+Ctrl+1 { move-window-to-workspace 1; }
 
     // Switches focus between the current and the previous workspace.
-    // Mod+Tab { focus-workspace-previous; }
+    Mod+Tab { focus-workspace-previous; }
 
     // The following binds move the focused window in and out of a column.
     // If the window is alone, they will consume it into the nearby column to the side.
@@ -568,8 +577,8 @@ binds {
     Mod+R { switch-preset-column-width; }
     Mod+Shift+R { switch-preset-window-height; }
     Mod+Ctrl+R { reset-window-height; }
-    Mod+Shift+F { maximize-column; }
-    Mod+F { fullscreen-window; }
+    Mod+F { maximize-column; }
+    Mod+Shift+F { fullscreen-window; }
 
     // Expand the focused column to space not taken up by other fully visible columns.
     // Makes the column "fill the rest of the space".
@@ -633,4 +642,8 @@ binds {
     // Powers off the monitors. To turn them back on, do any input like
     // moving the mouse or pressing any other key.
     Mod+Shift+P { power-off-monitors; }
+}
+switch-events {
+    lid-close { spawn "swaylock" "-i" "$HOME/.config/niri/wallpapers/lock"; }
+    // lid-open { spawn "notify-send" "The laptop lid is open!"; }
 }

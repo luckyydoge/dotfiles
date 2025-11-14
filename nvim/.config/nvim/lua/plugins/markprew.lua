@@ -5,7 +5,7 @@ return {
   opts = {
     preview = {
 
-      hybrid_modes = { 'i' },
+      hybrid_modes = { 'i', 'n' },
       linewise_hybrid_mode = true,
     },
   },

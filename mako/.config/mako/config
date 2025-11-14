@@ -2,3 +2,6 @@ height=300
 max-history=100
 default-timeout=5000
 border-radius=10
+
+[urgency=critical]
+layer=overlay

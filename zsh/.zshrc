@@ -13,7 +13,7 @@ compinit
 source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 
-alias ls='eza'
+alias ls='eza --icons=auto'
 alias ll='ls -lh'
 alias lla='ls -alh'
 alias lg='lazygit'
