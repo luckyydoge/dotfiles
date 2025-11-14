@@ -54,6 +54,10 @@ get_memory_usage() {
 get_battery_status() {
     # 尝试查找第一个 BAT 设备
     BATTERY_PATH=$(find /sys/class/power_supply/ -maxdepth 1 -type l -name "BAT*" -o -name "LCBT" -print -quit 2>/dev/null)
+    if [ -z "$BATTERY_PATH" ]; then
+        echo "N/A"
+        return
+    fi
     # 获取容量
     CAPACITY_FILE="$BATTERY_PATH/capacity"
     STATUS_FILE="$BATTERY_PATH/status"
@@ -126,12 +130,38 @@ get_battery_status() {
         # 3. 组合最终输出
         BODY="${ICON} ${CAPACITY}%"
         echo "$BODY"   
-    if [ -z "$BATTERY_PATH" ]; then
-        echo "N/A"
-        return
-    fi
  fi
 
+}
+
+get_volume_status() {
+    RESULT=""
+    STATUS=$(pactl get-sink-mute @DEFAULT_SINK@ | awk '{print $2}')
+    if [ "$STATUS" = "no" ]; then
+        VOLUME=$(pactl get-sink-volume @DEFAULT_SINK@ | awk '/Volume:/ {print $5}' | sed 's/[%|,]//g')
+        if [ "$VOLUME" -ge 60 ]; then
+            RESULT=" "
+        elif [ "$VOLUME" -ge 30 ]; then
+            RESULT=" "
+        else 
+            RESULT=" "
+        fi
+        RESULT+="${VOLUME}"
+    else 
+        RESULT=" "
+    fi
+    echo "$RESULT"
+}
+
+get_network_status() {
+    RESULT=""
+    STATUS=$(nmcli -t -f DEVICE,CONNECTION,TYPE dev status | rg wlan0 | awk -F ':' '{print $2}')
+    if [ -z "$STATUS" ]; then
+        RESULT="󱚵 "
+    else
+        RESULT="󰖩 $STATUS"
+    fi
+    echo "$RESULT"
 }
 
 # ===============================================
@@ -142,13 +172,17 @@ get_battery_status() {
 CURRENT_TIME=$(date "+%a %d %H:%M:%S")
 BATTERY_STATUS=$(get_battery_status)
 MEM_PERCENT=$(get_memory_usage)
+VOLUME_STATUS=$(get_volume_status)
+NETWORK_STATUS=$(get_network_status)
 
 # 2. 格式化通知内容 (使用 \n 换行)
 MESSAGE_TITLE="系统状态更新"
 
 MESSAGE_BODY="󰃰 ${CURRENT_TIME}\n"
 MESSAGE_BODY+="${BATTERY_STATUS}\n"
-MESSAGE_BODY+=" ${MEM_PERCENT}"
+MESSAGE_BODY+=" ${MEM_PERCENT}\n"
+MESSAGE_BODY+="${VOLUME_STATUS}\n"
+MESSAGE_BODY+="${NETWORK_STATUS}\n"
 
 # 3. 发送通知给 mako
 # -u low: 设置优先级为低

@@ -400,7 +400,7 @@ binds {
     Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn-sh "niri msg action power-off-monitors && swaylock -i $HOME/.config/niri/wallpapers/lock"; }
     Mod+Return { spawn "footclient"; }
     Mod+B { spawn-sh "killall waybar || waybar"; }
-    Mod+Shift+T { spawn "~/.scripts/status.sh"; }
+    Mod+Shift+W { spawn "~/.scripts/status.sh"; }
 
     // You can also use a shell. Do this if you need pipes, multiple commands, etc.
     // Note: the entire command goes as a single argument in the end.
@@ -413,6 +413,7 @@ binds {
     Shift+XF86AudioRaiseVolume allow-when-locked=true { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "0.1+"; }
     Shift+XF86AudioLowerVolume allow-when-locked=true { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "0.1-"; }
     XF86AudioMute        allow-when-locked=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SINK@" "toggle"; }
+    // XF86AudioMute        allow-when-locked=true { spawn-sh "(wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle && status.sh)"; }
     XF86AudioMicMute     allow-when-locked=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SOURCE@" "toggle"; }
     XF86MonBrightnessUp allow-when-locked=true { spawn "brightnessctl" "s" "+5%";}
     XF86MonBrightnessDown allow-when-locked=true { spawn "brightnessctl" "s" "5%-";}
