@@ -13,7 +13,7 @@ compinit
 source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 
-alias ls='eza --icons=auto'
+alias ls='eza'
 alias ll='ls -lh'
 alias lla='ls -alh'
 alias lg='lazygit'
@@ -42,7 +42,7 @@ export no_proxy="localhost,127.0.0.1,docker.internal,192.168.49.2"
 # export ALL_PROXY=""
 #
 
-source ./.fzf.zsh
+source $HOME/dotfiles/zsh/.fzf.zsh
 
 # export DISPLAY=:12
 export XMODIFIERS=@im=fcitx

@@ -1,6 +1,6 @@
 return { -- Autocompletion
   'saghen/blink.cmp',
-  event = 'VimEnter',
+  event = 'VeryLazy',
   version = '1.*',
   dependencies = {
     -- Snippet Engine
@@ -30,6 +30,10 @@ return { -- Autocompletion
       opts = {},
     },
     'folke/lazydev.nvim',
+    {
+      'xzbdmw/colorful-menu.nvim',
+      opts = {},
+    },
   },
   --- @module 'blink.cmp'
   --- @type blink.cmp.Config
@@ -71,11 +75,28 @@ return { -- Autocompletion
     completion = {
       -- By default, you may press `<c-space>` to show the documentation.
       -- Optionally, set `auto_show = true` to show the documentation after a delay.
-      documentation = { auto_show = true, auto_show_delay_ms = 500 },
+      documentation = { auto_show = true, auto_show_delay_ms = 300 },
+      menu = {
+        draw = {
+          -- We don't need label_description now because label and label_description are already
+          -- combined together in label by colorful-menu.nvim.
+          columns = { { 'kind_icon' }, { 'label', gap = 1 } },
+          components = {
+            label = {
+              text = function(ctx)
+                return require('colorful-menu').blink_components_text(ctx)
+              end,
+              highlight = function(ctx)
+                return require('colorful-menu').blink_components_highlight(ctx)
+              end,
+            },
+          },
+        },
+      },
     },
 
     sources = {
-      default = { 'lsp', 'buffer', 'path', 'snippets', 'lazydev' },
+      default = { 'snippets', 'lsp', 'buffer', 'path', 'lazydev' },
       providers = {
         lazydev = { module = 'lazydev.integrations.blink', score_offset = 100 },
       },
@@ -94,5 +115,12 @@ return { -- Autocompletion
 
     -- Shows a signature help window while you type arguments for a function
     signature = { enabled = true },
+    cmdline = {
+      completion = {
+        menu = {
+          auto_show = true,
+        },
+      },
+    },
   },
 }

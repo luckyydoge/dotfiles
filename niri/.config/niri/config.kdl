@@ -320,6 +320,9 @@ animations {
 // Window rules let you adjust behavior for individual windows.
 // Find more information on the wiki:
 // https://github.com/YaLTeR/niri/wiki/Configuration:-Window-Rules
+window-rule {
+    draw-border-with-background false
+}
 
 // Work around WezTerm's initial configure bug
 // by setting an empty default-column-width.
@@ -348,6 +351,21 @@ window-rule {
     open-focused false
     open-floating true
 }
+
+window-rule {
+    match app-id="zen"
+    match app-id="chrome"
+    open-on-workspace "browser"
+}
+
+window-rule {
+    match app-id="wechat"
+    match app-id="QQ"
+    open-on-workspace "chat"
+}
+
+workspace "chat"
+workspace "browser"
 
 window-rule {
     match app-id="foot"
