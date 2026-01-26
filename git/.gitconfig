@@ -8,5 +8,7 @@
 	cm = commit -m
 [color]
 	ui = auto
-[http]
-	proxy = http://127.0.0.1:10801
+; [http]
+; 	proxy = http://127.0.0.1:20701
+; [https]
+; 	proxy = http://127.0.0.1:20701

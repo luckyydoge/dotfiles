@@ -9,6 +9,9 @@ vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right win
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
+vim.keymap.set('n', '<leader>w', ':w', { desc = 'Save change' })
+vim.keymap.set('n', '<leader>wa', ':wa', { desc = 'Save all change' })
+
 -- 切换到下一个 Tab（替代默认的 gt，更直观）
 -- vim.keymap.set('n', '<leader>tl', 'gt', { desc = 'Go to next tab' })
 -- 切换到上一个 Tab（替代默认的 gT）

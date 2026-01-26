@@ -267,6 +267,7 @@ spawn-at-startup "udiskie"
 spawn-at-startup "easyeffects" "--gapplication-service"
 spawn-sh-at-startup "swaybg -i $HOME/.config/niri/wallpapers/bg"
 spawn-at-startup "swww-daemon"
+spawn-at-startup "copyq"
 
 environment {
     // DISPLAY ":0"
@@ -274,9 +275,10 @@ environment {
     XMODIFIERS "@im=fcitx"
     QT_IM_MODULE "fcitx"
     GTK_IM_MODULE "fcitx"
-    HTTPS_PROXY "http://127.0.0.1:10801"
-    HTTP_PROXY "http://127.0.0.1:10801"
-    ALL_PROXY "socks5h://127.0.0.1:10800"
+    HTTPS_PROXY "http://127.0.0.1:20171"
+    HTTP_PROXY "http://127.0.0.1:20171"
+    ALL_PROXY "socks5h://127.0.0.1:20170"
+    NO_PROXY "aur.archlinux.org,localhost,127.0.0.1"
 }
 
 cursor {
@@ -663,6 +665,6 @@ binds {
     Mod+Shift+P { power-off-monitors; }
 }
 switch-events {
-    lid-close { spawn "swaylock" "-i" "$HOME/.config/niri/wallpapers/lock"; }
+    // lid-close { spawn "swaylock" "-i" "$HOME/.config/niri/wallpapers/lock"; }
     // lid-open { spawn "notify-send" "The laptop lid is open!"; }
 }

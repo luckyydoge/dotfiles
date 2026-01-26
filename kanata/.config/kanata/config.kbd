@@ -1,0 +1,34 @@
+;; 1. 定义物理键位 (物理位置参考)
+(defsrc
+  caps
+  h j k l
+  u i o p
+  n m ,
+)
+
+(defcfg
+  ;; 1. 处理未定义的按键（你现在用的）
+  process-unmapped-keys yes
+)
+
+;; 2. 定义别名
+(defalias
+  ;; tap-hold: 短按 esc, 长按切换到名为 'nav' 的层
+  cap (tap-hold 150 150 esc (layer-toggle nav))
+)
+
+;; 3. 默认层 (主层)
+(deflayer default
+  @cap
+  h j k l
+  u i o p
+  n m ,
+)
+
+;; 4. 导航层 (当你长按 Caps 时激活)
+(deflayer nav
+  _          ;; _ 代表继承上一层的功能（即在这里还是 Caps 的长按状态）
+  left down up right
+  pgdn pgup home end
+  bspc del ins
+)

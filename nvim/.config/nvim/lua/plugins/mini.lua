@@ -36,6 +36,13 @@ return { -- Collection of various small independent plugins/modules
 
     require('mini.sessions').setup()
 
+    require('mini.files').setup()
+    vim.keymap.set('n', '<leader>fm', function()
+      require('mini.files').open()
+    end)
+
+    -- require('mini.tabline').setup()
+
     -- ... and there is more!
     --  Check out: https://github.com/echasnovski/mini.nvim
   end,
