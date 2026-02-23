@@ -2,7 +2,7 @@ return {
   -- Main LSP Configuration
   'neovim/nvim-lspconfig',
   -- lazy = true,
-  ft = { 'lua', 'java', 'c', 'rust', 'markdown' },
+  ft = { 'lua', 'java', 'c', 'rust', 'markdown', 'python' },
   dependencies = {
     -- Automatically install LSPs and related tools to stdpath for Neovim
     -- Mason must be loaded before its dependents so we need to set it up here.
@@ -190,6 +190,7 @@ return {
       -- gopls = {},
       -- pyright = {},
       rust_analyzer = {},
+      pyright = {},
       tinymist = {},
       -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
       --

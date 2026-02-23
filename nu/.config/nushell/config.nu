@@ -101,7 +101,23 @@ $env.config = {
             completer: $external_completer
         }
     }
+
+    hooks: {
+        env_change: {
+            PWD: [
+                # 把那段代码塞在这里
+                { ||
+                    if (which direnv | is-empty) {
+                        return
+                    }
+                    direnv export json | from json | default {} | load-env
+                }
+            ]
+        }
+    }
     # ...
 }
 
 source ~/.zoxide.nu
+# ~/.config/nushell/config.nu
+
