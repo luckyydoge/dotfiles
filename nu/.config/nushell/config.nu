@@ -121,3 +121,5 @@ $env.config = {
 source ~/.zoxide.nu
 # ~/.config/nushell/config.nu
 
+# atuin
+source ~/.local/share/atuin/init.nu
