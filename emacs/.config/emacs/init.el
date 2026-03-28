@@ -71,6 +71,10 @@
   :ensure t
   :after yasnippet)
 
+(use-package yasnippet-capf
+  :ensure t
+  :after yasnippet)
+
 ;;; --- 代码行内补全 (Corfu + Cape) ---
 (use-package corfu
   :ensure t
@@ -92,10 +96,10 @@
   :ensure t
   :init
   ;; 这一步极其重要：手动将所有后端缝合在一起
-  ;; (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-  ;; (add-to-list 'completion-at-point-functions #'cape-file)
-  ;; (add-to-list 'completion-at-point-functions #'yasnippet-capf)
-  ;; (add-to-list 'completion-at-point-functions #'cape-keyword)
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  (add-to-list 'completion-at-point-functions #'yasnippet-capf)
+  (add-to-list 'completion-at-point-functions #'cape-keyword)
   )
 
 (use-package avy
