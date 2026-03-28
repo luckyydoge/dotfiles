@@ -1,0 +1,16 @@
+# 1. 忽略当前目录下的一切文件和文件夹
+/*
+
+# 2. 允许追踪 (放行) init.el 和 early-init.el
+!/init.el
+!/early-init.el
+
+# 3. 允许追踪你存放自己配置、片段、主题的文件夹 (如果有的话)
+!/lisp/
+!/snippets/
+!/themes/
+
+# 4. 如果你想让 .gitignore 自己也被 Git 记录
+!/.gitignore
+
+!/huma/

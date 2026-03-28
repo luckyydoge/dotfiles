@@ -352,7 +352,7 @@ window-rule {
     match app-id="easy effects"
     match app-id="QQ"
     open-focused false
-    open-floating true
+//    open-floating true
 }
 
 window-rule {

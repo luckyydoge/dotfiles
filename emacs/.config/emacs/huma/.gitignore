@@ -1,0 +1,5 @@
+# 忽略 Rime 运行产生的二进制和数据库
+/build/
+/*.userdb/
+/user.yaml
+/installation.yaml

@@ -9,7 +9,7 @@ config = {
   -- font = wezterm.font("IosevkaTerm Nerd Font"),
   font = wezterm.font_with_fallback({
     -- 1. 优先使用 Iosevka Term (处理英文和代码符号)
-    { family = 'Iosevka Term Nerd Font', weight = 'Regular' },
+    { family = 'Sarasa Term SC', weight = 'Regular' },
 
     -- 2. 其次使用 霞鹜文楷 (处理中文)
     { family = 'LXGW WenKai',            weight = 'Regular' },
