@@ -2,6 +2,7 @@
 (tool-bar-mode 0)
 (scroll-bar-mode 0)
 (column-number-mode 1)
+(global-visual-line-mode 1)
 (setq display-line-numbers-type 'relative)
 (global-display-line-numbers-mode 1)
 (electric-pair-mode 1)
@@ -125,22 +126,23 @@
          ("M-s r" . consult-ripgrep)
          ;; 6. 查看历史记录
          ("M-y" . consult-yank-pop)
-	 ("M-s f" . consult-find))
+	 ("M-s f" . consult-fd))
 
   :init
   ;; 配置预览功能：在选择时实时跳转到对应位置
   ;; 默认情况下，当你上下移动光标，主窗口会实时更新
   (setq register-preview-delay 0.5
         register-preview-function #'consult-register-format)
-  :custom
+  ;;  :custom
   ;; 让 consult-find 使用 fd 替代 find
-  (consult-find-args "fd --color=never --full-path")
+  ;; (consult-find-args "fd --color=never --full-path") 
   :config
   ;; 优化：在 consult-line 搜索时，按需显示预览
   (consult-customize
    consult-ripgrep consult-git-grep consult-grep
    consult-bookmark consult-recent-file consult-xref
    :preview-key 'any)
+  (setq consult-find-args "fd --color=never --full-path --path-separator /")
   )
 
 
@@ -220,7 +222,7 @@
   :config
   ;; 2. 关键：强制 Emacs 在 rime 模式下将此键发送给引擎
   (define-key rime-mode-map (kbd "C-`") 'rime-send-keybinding)
-  (define-key rime-mode-map (kbd "S-SPC") 'rime-inline-ascii)
+  (define-key rime-mode-map (kbd "M-i") 'rime-inline-ascii)
   )
 
 ;; (set-selection-coding-system 'chinese-gbk-dos)
@@ -260,3 +262,84 @@
   (apheleia-global-mode +1))
 
 
+;;; --- Org Agenda & TodoList 配置 ---
+(use-package org
+  :ensure nil
+  :bind (("C-c a" . org-agenda)
+         ("C-c c" . org-capture)
+         ("C-c l" . org-store-link))
+  :custom
+  ;; 1. 多维管理：核心四个文件
+  ;; (org-agenda-files '("~/org/inbox.org" 
+  ;;                     "~/org/gtd.org"
+  ;;                     "~/org/projects.org"
+  ;;                     "~/org/journal.org"))
+
+  ;; 2. 状态流设计：体现“系统运行”思想
+  (org-todo-keywords
+   '((sequence "TODO(t)" "NEXT(n!)" "DOING(i!)" "WAIT(w@/!)" "|" "DONE(d!)" "ABORT(a@/!)")))
+
+  ;; 3. 记录日志到抽屉，保持界面整洁
+  (org-log-done 'time)
+  (org-log-into-drawer t)
+  (org-clock-into-drawer t)
+  (org-clock-out-when-done t) ; 任务完成自动停止计时
+
+  (org-agenda-span 7)
+  (org-agenda-start-on-weekday nil)
+
+  :config
+
+  ;; (defun my-org-journal-path ()
+  ;;   "生成路径格式：~/org/journal/2026/03-March/2026-03-29.org"
+  ;;   (let* ((journal-dir "~/org/journal/")
+  ;;          (year  (format-time-string "%Y"))
+  ;;          (month (format-time-string "%m-%B"))
+  ;;          (day   (format-time-string "%Y-%m-%d"))
+  ;;          (dest-dir (expand-file-name (concat journal-dir year "/" month "/"))))
+  ;;     ;; 如果文件夹不存在，自动创建（mkdir -p）
+  ;;     (unless (file-directory-p dest-dir)
+  ;; 	(make-directory dest-dir t))
+  ;;     (concat dest-dir day ".org")))
+  
+  ;; 4. RIDE 循环与墨氏复盘捕获模板
+  ;; (setq org-capture-templates
+  ;;       '(("t" "Todo" entry (file+headline "~/org/inbox.org" "收集箱")
+  ;;          "* TODO %?\n  创建时间: %U\n  来自: %a")
+  
+  ;;         ("m" "面试/会议" entry (file+headline "~/org/gtd.org" "日程")
+  ;;          "* NEXT %?\n  SCHEDULED: %^t\n  %i")
+
+  ;;         ;; --- 墨苍离方法论专属模板 ---
+  ;;         ("p" "RIDE 项目(按需学习)" entry (file+headline "~/org/projects.org" "认知工程")
+  ;;          "* %^{项目/卡点名称}\n** [R] 侦察\n- [ ] 绘制地图：此领域核心概念是什么？\n** [I] 定位\n- [ ] 核心卡点：不解决就走不动的那一步？\n** [D] 深钻\n- [ ] 针对性学习：学到刚好能做下一步决策\n** [E] 执行与萃取\n- [ ] 最小可行执行\n- [ ] 经验萃取：模型参数有哪些变化？")
+
+  ;;         ("r" "每日复盘(认知减熵)" entry (file my-org-journal-path)
+  ;;          "* 🌙 %U 复盘回溯\n** 1. 事实与有效归因 (剥离自我)\n%i\n- 事件：[客观动作/结果]\n- 归因：[内/外、稳定/暂时、可控/不可控]\n** 2. 模式识别 (参数分析)\n- 触发器：\n- 系统反应：\n- 潜在模型：[是哪种知见障？]\n** 3. 明日脚本 (If-Then)\n- 如果发生：\n- 那么行动：[具体的参数调整]")))
+
+  ;; 5. 自动化函数组
+  (defun my-org-todo-automation-h ()
+    "整合：NEXT 自动排程 + DOING 自动计时"
+    (cond 
+     ;; 切换到 NEXT 时弹出日历
+     ((string= org-state "NEXT")
+      (org-schedule nil))
+     
+     ;; 切换到 DOING 时开始计时
+     ((string= org-state "DOING")
+      (org-clock-in))
+     
+     ;; 切换到其他状态（如 WAIT, DONE, ABORT）且正在计时，则停止计时
+     ((and (member org-state '("TODO" "NEXT" "WAIT" "DONE" "ABORT"))
+           (org-clocking-p))
+      (org-clock-out))))
+
+  ;; 将整合后的函数挂载到状态变更钩子
+  (add-hook 'org-after-todo-state-change-hook #'my-org-todo-automation-h))
+
+;; --- 外部增强配置 ---
+
+;; 配合 org-modern 优化界面
+(with-eval-after-load 'org-agenda
+  (require 'org-modern)
+  (add-hook 'org-agenda-finalize-hook #'org-modern-agenda))
