@@ -17,14 +17,30 @@
 # You can remove these comments if you want or leave
 # them for future reference.
 
-# carapace
-$env.CARAPACE_BRIDGES = 'zsh,fish,bash,inshellisense' # optional
-mkdir $"($nu.cache-dir)"
-carapace _carapace nushell | save --force $"($nu.cache-dir)/carapace.nu"
+# # carapace
+# $env.CARAPACE_BRIDGES = 'zsh,fish,bash,inshellisense' # optional
+# mkdir $"($nu.cache-dir)"
+# carapace _carapace nushell | save --force $"($nu.cache-dir)/carapace.nu"
 
-# zoxide
-zoxide init nushell | save -f ~/.zoxide.nu
+# # zoxide
+# zoxide init nushell | save -f ~/.zoxide.nu
 
-# atuin
-mkdir ~/.local/share/atuin/
-atuin init nu | save -f ~/.local/share/atuin/init.nu
+# # atuin
+# mkdir ~/.local/share/atuin/
+# atuin init nu | save -f ~/.local/share/atuin/init.nu
+
+# --- Carapace 优化 ---
+let carapace_cache = ($nu.cache-dir | path join "carapace.nu")
+if not ($carapace_cache | path exists) {
+    mkdir ($nu.cache-dir)
+    carapace _carapace nushell | save --force $carapace_cache
+}
+# 注意：在 config.nu 中 source 这个文件，或者在这里直接 source
+# source $carapace_cache 
+
+# --- Zoxide 优化 ---
+let zoxide_cache = ($nu.home-path | path join ".zoxide.nu")
+if not ($zoxide_cache | path exists) {
+    zoxide init nushell | save -f $zoxide_cache
+}
+# source $zoxide_cache

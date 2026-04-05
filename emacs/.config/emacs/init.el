@@ -25,6 +25,26 @@
 ;; 字体配置：Maple Mono NF CN
 (set-face-attribute 'default nil :font "Sarasa Fixed SC" :height 160 :weight 'regular)
 
+
+;; 确定文件夹存在，如果不存在则创建
+(let ((target-dir "~/.config/emacs/auto-save/"))
+  (unless (file-exists-p target-dir)
+    (make-directory target-dir t)))
+
+(setq auto-save-file-name-transforms
+      `((".*" "~/.config/emacs/auto-save/" t)))
+
+(setq create-lockfiles nil)
+
+(setq backup-directory-alist
+      `((".*" . "~/.config/emacs/backups/")))
+
+;; 还可以顺便开启版本控制，保留多个旧版本
+(setq delete-old-versions t
+      kept-new-versions 6
+      kept-old-versions 2
+      version-control t)
+
 ;;; --- 网络与代理配置 ---
 (require 'package)
 (setq package-archives '(("gnu"    . "https://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
@@ -145,21 +165,6 @@
   (setq consult-find-args "fd --color=never --full-path --path-separator /")
   )
 
-
-
-(use-package org-modern
-  :ensure t
-  :hook (org-mode . org-modern-mode)
-  :config
-  (setq
-   ;; 编辑时显示的样式
-   ;;   org-modern-star '("?" "○" "?" "◇" "?") ; 替换原本的 * 号
-   ;;   org-modern-list '((?- . "?") (?+ . "?")) ; 替换列表符号
-   org-modern-todo t                       ; 让 TODO 变成圆角方块
-   org-modern-priority t                   ; 让优先级 [#A] 变得更显眼
-   org-modern-tag t                        ; 让 :Tag: 变成精美的标签
-   ))
-
 (use-package expand-region
   :ensure t  ;; 如果本地没有，自动通过 ELPA/MELPA 安装
   :bind ("C-=" . er/expand-region)
@@ -201,51 +206,42 @@
 
 (global-set-key (kbd "C-.") 'duplicate-line)
 
-;; (let ((my-leetcode-venv (expand-file-name "~/.emacs.d/leetcode-env/Scripts/python.exe")))
-;;   (setq leetcode-python-binary my-leetcode-venv)
-;;   ;; 这一行最关键：有些插件如果检测到路径存在就不会再尝试执行 venv --clear 那行报错命令
-;;   (setq leetcode-venv-executable-path my-leetcode-venv)
-;;   ;; 强制告诉插件环境已经准备好了，不要再自动安装
-;;   (setq leetcode-setup-done t))
 
 (use-package rime
-  ;;  :ensure t
   :custom
   (default-input-method "rime")
   (rime-share-data-dir (expand-file-name "huma" user-emacs-directory))
   (rime-user-data-dir (expand-file-name "huma" user-emacs-directory))
-  (rime-default-scheme "tigress")
+  (rime-default-scheme "tigress") ; 虎码
   (rime-translate-keybindings '("C-`" "<shift>"))
   (rime-inline-ascii-trigger 'shift-l)
   (rime-show-candidate 'posframe)
   
+  :init
+  ;; 在加载前定义的辅助函数，确保 Minibuffer 逻辑可用
+  (defun my/rime-toggle-inline ()
+    "在 Minibuffer 中安全切换 Rime 的中英模式"
+    (interactive)
+    (if (fboundp 'rime-inline-ascii)
+        (rime-inline-ascii)
+      (message "Rime 未就绪")))
+  
   :config
-  ;; 2. 关键：强制 Emacs 在 rime 模式下将此键发送给引擎
+  ;; 1. 基础按键绑定
   (define-key rime-mode-map (kbd "C-`") 'rime-send-keybinding)
   (define-key rime-mode-map (kbd "M-i") 'rime-inline-ascii)
+  (define-key minibuffer-local-map (kbd "M-i") #'my/rime-toggle-inline)
+
+  ;; 2. 界面与默认行为
+  (setq rime-mode-line-indicator '(" [中]" " [英]"))
+  (set-input-method "rime") ; 确保全局默认
+
+  ;; 3. 自动化钩子 (Hook)
+  ;; 自动激活 Rime
+  (add-hook 'after-change-major-mode-hook (lambda () (activate-input-method "rime")))
+  
   )
 
-;; (set-selection-coding-system 'chinese-gbk-dos)
-;; (setq rime-translate-keybindings '("C-`"))
-
-;; 确定文件夹存在，如果不存在则创建
-(let ((target-dir "~/.config/emacs/auto-save/"))
-  (unless (file-exists-p target-dir)
-    (make-directory target-dir t)))
-
-(setq auto-save-file-name-transforms
-      `((".*" "~/.config/emacs/auto-save/" t)))
-
-(setq create-lockfiles nil)
-
-(setq backup-directory-alist
-      `((".*" . "~/.config/emacs/backups/")))
-
-;; 还可以顺便开启版本控制，保留多个旧版本
-(setq delete-old-versions t
-      kept-new-versions 6
-      kept-old-versions 2
-      version-control t)
 
 ;; 1. 安装并配置 nix-mode
 (use-package nix-mode
@@ -262,84 +258,110 @@
   (apheleia-global-mode +1))
 
 
-;;; --- Org Agenda & TodoList 配置 ---
+;;; --- Org-mode 综合配置中心 ---
+
 (use-package org
   :ensure nil
   :bind (("C-c a" . org-agenda)
          ("C-c c" . org-capture)
          ("C-c l" . org-store-link))
   :custom
-  ;; 1. 多维管理：核心四个文件
-  ;; (org-agenda-files '("~/org/inbox.org" 
-  ;;                     "~/org/gtd.org"
-  ;;                     "~/org/projects.org"
-  ;;                     "~/org/journal.org"))
-
-  ;; 2. 状态流设计：体现“系统运行”思想
+  ;; 1. 多维管理与状态流
+  (org-agenda-files '("~/org/todo.org"))
   (org-todo-keywords
-   '((sequence "TODO(t)" "NEXT(n!)" "DOING(i!)" "WAIT(w@/!)" "|" "DONE(d!)" "ABORT(a@/!)")))
-
-  ;; 3. 记录日志到抽屉，保持界面整洁
+   '((sequence "TODO(t)" "NEXT(n!)" "DOING(i!)" "WAIT(w@/!)" "|" "DONE(d!)" "CANCELED(c@/!)")))
+  
+  ;; 2. 日志与计时管理
   (org-log-done 'time)
   (org-log-into-drawer t)
   (org-clock-into-drawer t)
-  (org-clock-out-when-done t) ; 任务完成自动停止计时
-
+  (org-clock-out-when-done t)
+  
+  ;; 3. 视图偏好
   (org-agenda-span 7)
   (org-agenda-start-on-weekday nil)
+  (org-startup-indented t)
 
   :config
+  ;; --- ID 与 链接系统 (加载 org-id 以支持回溯) ---
+  (require 'org-id)
+  (setq org-id-link-to-org-use-id t)
+  (setq org-id-track-globally t)
 
-  ;; (defun my-org-journal-path ()
-  ;;   "生成路径格式：~/org/journal/2026/03-March/2026-03-29.org"
-  ;;   (let* ((journal-dir "~/org/journal/")
-  ;;          (year  (format-time-string "%Y"))
-  ;;          (month (format-time-string "%m-%B"))
-  ;;          (day   (format-time-string "%Y-%m-%d"))
-  ;;          (dest-dir (expand-file-name (concat journal-dir year "/" month "/"))))
-  ;;     ;; 如果文件夹不存在，自动创建（mkdir -p）
-  ;;     (unless (file-directory-p dest-dir)
-  ;; 	(make-directory dest-dir t))
-  ;;     (concat dest-dir day ".org")))
-  
-  ;; 4. RIDE 循环与墨氏复盘捕获模板
-  ;; (setq org-capture-templates
-  ;;       '(("t" "Todo" entry (file+headline "~/org/inbox.org" "收集箱")
-  ;;          "* TODO %?\n  创建时间: %U\n  来自: %a")
-  
-  ;;         ("m" "面试/会议" entry (file+headline "~/org/gtd.org" "日程")
-  ;;          "* NEXT %?\n  SCHEDULED: %^t\n  %i")
+  ;; --- Capture 模板配置 ---
+  (setq org-capture-templates
+        '(("t" "todo" entry (file "~/org/todo.org")
+           "* TODO %:description\n  :PROPERTIES:\n  :SOURCE: %a\n  :CREATED: %U\n  :END:\n" 
+           :immediate-finish t :prepend t)))
 
-  ;;         ;; --- 墨苍离方法论专属模板 ---
-  ;;         ("p" "RIDE 项目(按需学习)" entry (file+headline "~/org/projects.org" "认知工程")
-  ;;          "* %^{项目/卡点名称}\n** [R] 侦察\n- [ ] 绘制地图：此领域核心概念是什么？\n** [I] 定位\n- [ ] 核心卡点：不解决就走不动的那一步？\n** [D] 深钻\n- [ ] 针对性学习：学到刚好能做下一步决策\n** [E] 执行与萃取\n- [ ] 最小可行执行\n- [ ] 经验萃取：模型参数有哪些变化？")
-
-  ;;         ("r" "每日复盘(认知减熵)" entry (file my-org-journal-path)
-  ;;          "* 🌙 %U 复盘回溯\n** 1. 事实与有效归因 (剥离自我)\n%i\n- 事件：[客观动作/结果]\n- 归因：[内/外、稳定/暂时、可控/不可控]\n** 2. 模式识别 (参数分析)\n- 触发器：\n- 系统反应：\n- 潜在模型：[是哪种知见障？]\n** 3. 明日脚本 (If-Then)\n- 如果发生：\n- 那么行动：[具体的参数调整]")))
-
-  ;; 5. 自动化函数组
+  ;; --- 自动化函数组：状态变更触发器 ---
   (defun my-org-todo-automation-h ()
     "整合：NEXT 自动排程 + DOING 自动计时"
     (cond 
-     ;; 切换到 NEXT 时弹出日历
-     ((string= org-state "NEXT")
-      (org-schedule nil))
-     
-     ;; 切换到 DOING 时开始计时
-     ((string= org-state "DOING")
-      (org-clock-in))
-     
-     ;; 切换到其他状态（如 WAIT, DONE, ABORT）且正在计时，则停止计时
-     ((and (member org-state '("TODO" "NEXT" "WAIT" "DONE" "ABORT"))
-           (org-clocking-p))
-      (org-clock-out))))
+     ((string= org-state "NEXT") (org-schedule nil))
+     ((string= org-state "DOING") (org-clock-in))
+     ((and (not (string= org-state "DOING")) (org-clocking-p)) (org-clock-out))))
 
-  ;; 将整合后的函数挂载到状态变更钩子
-  (add-hook 'org-after-todo-state-change-hook #'my-org-todo-automation-h))
+  (add-hook 'org-after-todo-state-change-hook #'my-org-todo-automation-h)
 
-;; --- 外部增强配置 ---
+  ;; --- 自定义功能：任务归并 (Refile to Source ID) ---
+  (defun my/org-refile-to-source-id-insert-at-top ()
+    "将任务内容插入至源笔记 ID 标题的正下方，并删除目标处的 ID。"
+    (interactive)
+    (let* ((source (org-entry-get nil "SOURCE"))
+           (id (when (and source (string-match "id:\\([a-z0-9-]+\\)" source))
+                 (match-string 1 source))))
+      (if (not id)
+          (user-error "没有有效的 SOURCE ID")
+        (let ((m (org-id-find id)))
+          (if (not m)
+              (user-error "找不到目标 ID %s" id)
+            (let* ((target-file (car m))
+                   (target-pos (cdr m))
+                   (entry-text (save-excursion
+                                 (org-back-to-heading t)
+                                 (let ((beg (save-excursion (forward-line 1) (point)))
+                                       (end (org-end-of-subtree t t)))
+                                   (buffer-substring-no-properties beg end)))))
+              (with-current-buffer (find-file-noselect target-file)
+                (save-excursion
+                  (goto-char target-pos)
+                  (org-back-to-heading t)
+                  (org-delete-property "ID")
+                  (end-of-line)
+                  (insert "\n" entry-text)
+                  (unless (bolp) (insert "\n"))
+                  (save-buffer)))
+              (org-cut-subtree)
+              (message "内容已归并，ID 已清理。")))))))
+  )
 
-;; 配合 org-modern 优化界面
-(with-eval-after-load 'org-agenda
-  (require 'org-modern)
-  (add-hook 'org-agenda-finalize-hook #'org-modern-agenda))
+(use-package org-modern
+  :ensure t
+  :hook (org-mode . org-modern-mode)
+  :config
+  (setq
+   ;; 编辑时显示的样式
+   ;;   org-modern-star '("?" "○" "?" "◇" "?") ; 替换原本的 * 号
+   ;;   org-modern-list '((?- . "?") (?+ . "?")) ; 替换列表符号
+   org-modern-todo t                       ; 让 TODO 变成圆角方块
+   org-modern-priority t                   ; 让优先级 [#A] 变得更显眼
+   org-modern-tag t                        ; 让 :Tag: 变成精美的标签
+   ))
+
+;;; --- Org-Roam 知识库配置 ---
+(use-package org-roam
+  :ensure nil
+  :custom
+  (org-roam-directory (file-truename "~/org"))
+  (org-roam-capture-templates
+   '(("d" "default" plain "%?"
+      :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+      :unnarrowed t)))
+  :bind (("C-c n f" . org-roam-node-find)
+         ("C-c n g" . org-roam-graph)
+         ("C-c n i" . org-roam-node-insert)
+         ("C-c n c" . org-roam-capture)
+         ("C-c n l" . org-roam-buffer-toggle))
+  :config
+  (org-roam-db-autosync-mode))
