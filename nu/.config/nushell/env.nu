@@ -44,3 +44,5 @@ if not ($zoxide_cache | path exists) {
     zoxide init nushell | save -f $zoxide_cache
 }
 # source $zoxide_cache
+
+$env.PATH = ($env.PATH | prepend $"($env.HOME)/.bun/bin")

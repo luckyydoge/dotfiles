@@ -19,9 +19,10 @@
 
 $env.config.buffer_editor = "nvim"
 $env.config.shell_integration.osc133 = false
+$env.EDITOR = "nvim"
 
 $env.config = {
-    edit_mode: "vi"
+    #    edit_mode: "vi"
 }
 
 # alias ls = eza -

@@ -7,7 +7,13 @@
 (global-display-line-numbers-mode 1)
 (electric-pair-mode 1)
 (setq custom-file "./custom.el")
+(setq scroll-margin 5)
+(setq scroll-step 1)
+(setq scroll-conservatively 10000)
 (setq user-emacs-directory "~/.config/emacs/")
+(global-hl-line-mode 1)
+					; 所有编程模式自动开启代码折叠
+(add-hook 'prog-mode-hook #'hs-minor-mode)
 
 ;;; --- 基础视觉与交互配置 ---
 (menu-bar-mode 0)
@@ -16,6 +22,7 @@
 (column-number-mode 1)
 (setq visible-bell t)
 (setq display-line-numbers-type 'relative)
+(setq org-src-fontify-natively t)
 (global-display-line-numbers-mode 1)
 (electric-pair-mode 1)
 (which-key-mode 1)
@@ -25,6 +32,18 @@
 ;; 字体配置：Maple Mono NF CN
 (set-face-attribute 'default nil :font "Sarasa Fixed SC" :height 160 :weight 'regular)
 
+(global-set-key (kbd "M-[") 'tab-bar-switch-to-prev-tab)
+(global-set-key (kbd "M-]") 'tab-bar-switch-to-next-tab)
+(setq tab-bar-select-tab-modifiers '(meta))
+(global-set-key (kbd "M-1") (lambda () (interactive) (tab-bar-select-tab 1)))
+(global-set-key (kbd "M-2") (lambda () (interactive) (tab-bar-select-tab 2)))
+(global-set-key (kbd "M-3") (lambda () (interactive) (tab-bar-select-tab 3)))
+(global-set-key (kbd "M-4") (lambda () (interactive) (tab-bar-select-tab 4)))
+(global-set-key (kbd "M-5") (lambda () (interactive) (tab-bar-select-tab 5)))
+(global-set-key (kbd "M-6") (lambda () (interactive) (tab-bar-select-tab 6)))
+(global-set-key (kbd "M-7") (lambda () (interactive) (tab-bar-select-tab 7)))
+(global-set-key (kbd "M-8") (lambda () (interactive) (tab-bar-select-tab 8)))
+(global-set-key (kbd "M-9") (lambda () (interactive) (tab-bar-select-tab 9)))
 
 ;; 确定文件夹存在，如果不存在则创建
 (let ((target-dir "~/.config/emacs/auto-save/"))
@@ -184,6 +203,11 @@
   :ensure nil ; Emacs 29+ 内置
   :hook (python-mode . eglot-ensure)
   :config
+
+  ;; 强制 Python 使用 pyright（必须！FastAPI 全靠它）
+  ;; (add-to-list 'eglot-server-programs
+  ;;              '((python-mode python-ts-mode) . ("pyright" "--stdio")))
+  
   ;; 配合 envrc，确保 eglot 启动前环境变量已就绪
   (add-hook 'eglot--managed-mode-hook
             (lambda () (when (fboundp 'envrc-mode) (envrc-mode 1)))))
@@ -264,7 +288,9 @@
   :ensure nil
   :bind (("C-c a" . org-agenda)
          ("C-c c" . org-capture)
-         ("C-c l" . org-store-link))
+         ("C-c l" . org-store-link)
+	 ("C-c r" . my/org-refile-to-source-id-insert-at-top)
+	 )
   :custom
   ;; 1. 多维管理与状态流
   (org-agenda-files '("~/org/todo.org"))
@@ -336,18 +362,18 @@
               (message "内容已归并，ID 已清理。")))))))
   )
 
-(use-package org-modern
-  :ensure t
-  :hook (org-mode . org-modern-mode)
-  :config
-  (setq
-   ;; 编辑时显示的样式
-   ;;   org-modern-star '("?" "○" "?" "◇" "?") ; 替换原本的 * 号
-   ;;   org-modern-list '((?- . "?") (?+ . "?")) ; 替换列表符号
-   org-modern-todo t                       ; 让 TODO 变成圆角方块
-   org-modern-priority t                   ; 让优先级 [#A] 变得更显眼
-   org-modern-tag t                        ; 让 :Tag: 变成精美的标签
-   ))
+;; (use-package org-modern
+;;   :ensure t
+;;   :hook (org-mode . org-modern-mode)
+;;   :config
+;;   (setq
+;;    ;; 编辑时显示的样式
+;;    ;;   org-modern-star '("?" "○" "?" "◇" "?") ; 替换原本的 * 号
+;;    ;;   org-modern-list '((?- . "?") (?+ . "?")) ; 替换列表符号
+;;    org-modern-todo t                       ; 让 TODO 变成圆角方块
+;;    org-modern-priority t                   ; 让优先级 [#A] 变得更显眼
+;;    org-modern-tag t                        ; 让 :Tag: 变成精美的标签
+;;    ))
 
 ;;; --- Org-Roam 知识库配置 ---
 (use-package org-roam
@@ -365,3 +391,46 @@
          ("C-c n l" . org-roam-buffer-toggle))
   :config
   (org-roam-db-autosync-mode))
+(setq org-agenda-custom-commands
+      '(("n" "复习看板：日程 + 任务池"
+         ((agenda "" ((org-agenda-span 7)))      ; 上半部分：显示 7 天日程
+          (alltodo ""                            ; 下半部分：显示所有待办任务
+                   ((org-agenda-overriding-header "待复习任务池")
+                    (org-agenda-files '("~/org/todo.org"))))))))
+
+(use-package ace-window
+  :ensure t
+  :bind ("M-o" . ace-window)
+  :config
+  (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))) ; 使用左手常用键
+
+(setq tab-bar-show 1)          ;; 始终显示标签栏
+(setq tab-bar-new-button-show nil) ;; 保持简洁
+(setq tab-bar-tab-hints t)     ;; 显示数字编号 (Meta-1, Meta-2 切换)
+
+;; 编写一个优雅的切换函数：切换项目时自动创建一个新 Tab 并命名
+(defun my/project-switch-in-tab ()
+  (interactive)
+  (let ((project (project-current)))
+    (tab-bar-new-tab)
+    (call-interactively #'project-switch-project)
+    (let ((name (project-name (project-current))))
+      (tab-bar-rename-tab name))))
+
+(global-set-key (kbd "C-x p t") #'my/project-switch-in-tab)
+
+;; (defun my/get-pyright-path ()
+;;   "从 direnv 环境中获取 pyright 路径"
+;;   (let* ((default-directory (locate-dominating-file default-directory ".envrc")))
+;;     (when default-directory
+;;       (string-trim
+;;        (shell-command-to-string
+;;         "direnv exec . which pyright 2>/dev/null")))))
+
+;; (with-eval-after-load 'eglot
+;;   (add-to-list 'eglot-server-programs
+;;                '(python-mode . (lambda ()
+;;                                  (let ((pyright-path (my/get-pyright-path)))
+;;                                    (if pyright-path
+;;                                        (list pyright-path)
+;;                                      '("pyright")))))))
