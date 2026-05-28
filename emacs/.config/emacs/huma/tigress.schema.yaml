@@ -45,7 +45,7 @@ switches: # 0 默认关，1 默认开
     reset: 0
     states: [ U编关, U编开]
   - name: ascii_punct
-    reset: 1
+    reset: 0
     states: [ 。，, ．， ]
   # - name: dz_ci  #过滤词组
   #   reset: 0

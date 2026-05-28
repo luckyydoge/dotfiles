@@ -216,17 +216,6 @@
   
   :hook (after-init . envrc-global-mode))
 
-(use-package leetcode
-  :ensure t
-  :custom
-  (leetcode-prefer-language "python")        ;; 设置你的主语言为 Java
-  (leetcode-prefer-sql "mysql")
-  (leetcode-save-solutions t)              ;; 自动保存你的解法
-  (leetcode-directory "~/Documents/leetcode") ;; 解题代码存放路径
-  :config				      ;
-  ;; 如果你使用的是中国区账号，务必加上这行
-  (setq leetcode-api-base "https://leetcode.cn")
-  )
 
 (global-set-key (kbd "C-.") 'duplicate-line)
 
@@ -237,35 +226,28 @@
   (rime-share-data-dir (expand-file-name "huma" user-emacs-directory))
   (rime-user-data-dir (expand-file-name "huma" user-emacs-directory))
   (rime-default-scheme "tigress") ; 虎码
-  (rime-translate-keybindings '("C-`" "<shift>"))
-  (rime-inline-ascii-trigger 'shift-l)
   (rime-show-candidate 'posframe)
   
   :init
-  ;; 在加载前定义的辅助函数，确保 Minibuffer 逻辑可用
-  (defun my/rime-toggle-inline ()
-    "在 Minibuffer 中安全切换 Rime 的中英模式"
-    (interactive)
-    (if (fboundp 'rime-inline-ascii)
-        (rime-inline-ascii)
-      (message "Rime 未就绪")))
   
   :config
-  ;; 1. 基础按键绑定
-  (define-key rime-mode-map (kbd "C-`") 'rime-send-keybinding)
-  (define-key rime-mode-map (kbd "M-i") 'rime-inline-ascii)
-  (define-key minibuffer-local-map (kbd "M-i") #'my/rime-toggle-inline)
 
   ;; 2. 界面与默认行为
   (setq rime-mode-line-indicator '(" [中]" " [英]"))
-  (set-input-method "rime") ; 确保全局默认
-
-  ;; 3. 自动化钩子 (Hook)
-  ;; 自动激活 Rime
-  (add-hook 'after-change-major-mode-hook (lambda () (activate-input-method "rime")))
-  
   )
-
+(global-set-key (kbd "M-i") #'toggle-input-method)
+(setq rime-inline-ascii-trigger 'shift-r)
+(setq rime-disable-predicates
+      '(rime-predicate-prog-in-code-p
+	rime-predicate-after-alphabet-char-p
+	meow-normal-mode-p
+        meow-motion-mode-p
+        meow-keypad-mode-p
+        meow-beacon-mode-p
+	))
+(setq rime-inline-predicates
+      '(rime-predicate-space-after-cc-p)
+      )
 
 ;; 1. 安装并配置 nix-mode
 (use-package nix-mode
@@ -434,3 +416,95 @@
 ;;                                    (if pyright-path
 ;;                                        (list pyright-path)
 ;;                                      '("pyright")))))))
+
+;; meow 配置
+
+
+(use-package meow
+  :ensure t
+  :config
+  (defun meow-setup ()
+    (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
+    (meow-motion-define-key
+     '("j" . meow-next)
+     '("k" . meow-prev)
+     '("<escape>" . ignore))
+    (meow-leader-define-key
+     ;; Use SPC (0-9) for digit arguments.
+     '("1" . meow-digit-argument)
+     '("2" . meow-digit-argument)
+     '("3" . meow-digit-argument)
+     '("4" . meow-digit-argument)
+     '("5" . meow-digit-argument)
+     '("6" . meow-digit-argument)
+     '("7" . meow-digit-argument)
+     '("8" . meow-digit-argument)
+     '("9" . meow-digit-argument)
+     '("0" . meow-digit-argument)
+     '("/" . meow-keypad-describe-key)
+     '("?" . meow-cheatsheet))
+    (meow-normal-define-key
+     '("0" . meow-expand-0)
+     '("9" . meow-expand-9)
+     '("8" . meow-expand-8)
+     '("7" . meow-expand-7)
+     '("6" . meow-expand-6)
+     '("5" . meow-expand-5)
+     '("4" . meow-expand-4)
+     '("3" . meow-expand-3)
+     '("2" . meow-expand-2)
+     '("1" . meow-expand-1)
+     '("-" . negative-argument)
+     '(";" . meow-reverse)
+     '("," . meow-inner-of-thing)
+     '("." . meow-bounds-of-thing)
+     '("[" . meow-beginning-of-thing)
+     '("]" . meow-end-of-thing)
+     '("a" . meow-append)
+     '("A" . meow-open-below)
+     '("b" . meow-back-word)
+     '("B" . meow-back-symbol)
+     '("c" . meow-change)
+     '("d" . meow-delete)
+     '("D" . meow-backward-delete)
+     '("e" . meow-next-word)
+     '("E" . meow-next-symbol)
+     '("f" . meow-find)
+     '("g" . meow-cancel-selection)
+     '("G" . meow-grab)
+     '("h" . meow-left)
+     '("H" . meow-left-expand)
+     '("i" . meow-insert)
+     '("I" . meow-open-above)
+     '("j" . meow-next)
+     '("J" . meow-next-expand)
+     '("k" . meow-prev)
+     '("K" . meow-prev-expand)
+     '("l" . meow-right)
+     '("L" . meow-right-expand)
+     '("m" . meow-join)
+     '("n" . meow-search)
+     '("o" . meow-block)
+     '("O" . meow-to-block)
+     '("p" . meow-yank)
+     '("q" . meow-quit)
+     '("Q" . meow-goto-line)
+     '("r" . meow-replace)
+     '("R" . meow-swap-grab)
+     '("s" . meow-kill)
+     '("t" . meow-till)
+     '("u" . meow-undo)
+     '("U" . meow-undo-in-selection)
+     '("v" . meow-visit)
+     '("w" . meow-mark-word)
+     '("W" . meow-mark-symbol)
+     '("x" . meow-line)
+     '("X" . meow-goto-line)
+     '("y" . meow-save)
+     '("Y" . meow-sync-grab)
+     '("z" . meow-pop-selection)
+     '("'" . repeat)
+     '("<escape>" . ignore)))
+  )
+(meow-setup)
+(meow-global-mode 1)
