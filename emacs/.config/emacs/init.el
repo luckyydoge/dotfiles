@@ -5,7 +5,6 @@
 (global-visual-line-mode 1)
 (setq display-line-numbers-type 'relative)
 (global-display-line-numbers-mode 1)
-(electric-pair-mode 1)
 (setq custom-file "./custom.el")
 (setq scroll-margin 5)
 (setq scroll-step 1)
@@ -24,8 +23,23 @@
 (setq display-line-numbers-type 'relative)
 (setq org-src-fontify-natively t)
 (global-display-line-numbers-mode 1)
-(electric-pair-mode 1)
 (which-key-mode 1)
+
+;;; --- 结构化括号编辑 (Smartparens) ---
+(use-package smartparens
+  :ensure t
+  :config
+  (require 'smartparens-config)
+  (smartparens-global-mode 1)
+  (sp-with-modes '(racket-mode racket-hash-lang-mode racket-repl-mode)
+    (sp-local-pair "'" nil :actions nil)
+    (sp-local-pair "`" nil :actions nil)))
+
+;;; --- 彩虹括号 (Rainbow Delimiters) ---
+(use-package rainbow-delimiters
+  :ensure t
+  :hook (prog-mode . rainbow-delimiters-mode))
+
 ;; 使用 Shift + 方向键 在窗口间移动
 (windmove-default-keybindings)
 
@@ -198,6 +212,15 @@
   :interpreter "lua"
   :config
   (setq lua-indent-level 2)) ; 设置缩进为 2（Lua 社区惯例）
+
+;;; --- Racket / Scheme (SICP 学习) ---
+(use-package racket-mode
+  :ensure t
+  :mode (("\\.rkt\\'" . racket-mode))
+  :hook (racket-mode . racket-xp-mode)
+  :config
+  ;;  xs(setq racket-program "racket")
+  )
 
 (use-package eglot
   :ensure nil ; Emacs 29+ 内置

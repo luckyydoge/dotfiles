@@ -118,6 +118,9 @@ speller:
   # initials: "abcdefghijklmnopqrstuvwxyz;'"
   auto_select_pattern: ^;\w+ #自动上屏规则  对 [;] 引导的编码实行候选唯一自动上屏
   # 若要添加四码上屏功能，在  ^;\w+ 后面 加上  |^\w{4}$  即可
+  algebra: 
+  - xlit/qwertyuiopasdfghjklzxcvbnm/qwfpbjluyoarstgmneizxcdvkh
+
 
 translator:
   dictionary: tigress
