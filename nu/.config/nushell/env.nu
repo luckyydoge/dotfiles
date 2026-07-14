@@ -39,10 +39,11 @@ if not ($carapace_cache | path exists) {
 # source $carapace_cache 
 
 # --- Zoxide 优化 ---
-let zoxide_cache = ($nu.home-path | path join ".zoxide.nu")
+let zoxide_cache = ($nu.home-dir | path join ".zoxide.nu")
 if not ($zoxide_cache | path exists) {
     zoxide init nushell | save -f $zoxide_cache
 }
 # source $zoxide_cache
 
 $env.PATH = ($env.PATH | prepend $"($env.HOME)/.bun/bin")
+

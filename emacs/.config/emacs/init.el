@@ -24,6 +24,10 @@
 (setq org-src-fontify-natively t)
 (global-display-line-numbers-mode 1)
 (which-key-mode 1)
+(setopt use-short-answers t)
+(require 'ox-md)
+(use-package emacs
+  :bind (("C-r" . revert-buffer)))
 
 ;;; --- 结构化括号编辑 (Smartparens) ---
 (use-package smartparens
@@ -90,12 +94,18 @@
 ;;         ("https" . "127.0.0.1:40808")
 ;;         ("no_proxy" . "^127\\.0\\.0\\.1$")))
 
-(use-package catppuccin-theme
+;; (use-package catppuccin-theme
+;;   :ensure t
+;;   :config
+;;   ;; 设置你喜欢的风味：'latte, 'frappe, 'macchiato, 或 'mocha (默认)
+;;   (setq catppuccin-flavor 'mocha) 
+;;   (load-theme 'catppuccin :no-confirm))
+(use-package gruvbox-theme
   :ensure t
   :config
   ;; 设置你喜欢的风味：'latte, 'frappe, 'macchiato, 或 'mocha (默认)
   (setq catppuccin-flavor 'mocha) 
-  (load-theme 'catppuccin :no-confirm))
+  (load-theme 'gruvbox-dark-medium t))
 
 ;;; --- 垂直补全系统 (Minibuffer UI) ---
 (use-package vertico
@@ -129,32 +139,49 @@
   :ensure t
   :after yasnippet)
 
+(use-package markdown-mode
+  :ensure t)
+
+;; (add-to-list 'load-path "./lsp-bridge")
+(add-to-list 'load-path (expand-file-name "lsp-bridge" (file-name-directory load-file-name)))
+
+(require 'yasnippet)
+(yas-global-mode 1)
+
+(require 'lsp-bridge)
+(global-lsp-bridge-mode)
+(setq acm-backend-order '( "template-first-part-candidates" "mode-first-part-candidates"
+ "tabnine-candidates" "copilot-candidates" "codeium-candidates"
+ "template-second-part-candidates" "mode-second-part-candidates")
+)
+;; (setq lsp-bridge-python-command "python-lsp-bridge")
+
 ;;; --- 代码行内补全 (Corfu + Cape) ---
-(use-package corfu
-  :ensure t
-  :custom
-  (corfu-auto t)
-  (corfu-auto-prefix 2)
-  (corfu-auto-delay 0.1) ; 让弹出更灵敏
-  (corfu-quit-at-boundary 'separator)
-  :init
-  (global-corfu-mode))
+;; (use-package corfu
+;;   :ensure t
+;;   :custom
+;;   (corfu-auto t)
+;;   (corfu-auto-prefix 2)
+;;   (corfu-auto-delay 0.1) ; 让弹出更灵敏
+;;   (corfu-quit-at-boundary 'separator)
+;;   :init
+;;   (global-corfu-mode))
 
-(add-hook 'org-mode-hook
-          (lambda ()
-            (setq-local completion-at-point-functions
-                        (remove 'ispell-completion-at-point completion-at-point-functions))))
+;; (add-hook 'org-mode-hook
+;;           (lambda ()
+;;             (setq-local completion-at-point-functions
+;;                         (remove 'ispell-completion-at-point completion-at-point-functions))))
 
-;; 安装 Cape 是解决“不弹窗”的终极方案
-(use-package cape
-  :ensure t
-  :init
-  ;; 这一步极其重要：手动将所有后端缝合在一起
-  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-  (add-to-list 'completion-at-point-functions #'cape-file)
-  (add-to-list 'completion-at-point-functions #'yasnippet-capf)
-  (add-to-list 'completion-at-point-functions #'cape-keyword)
-  )
+;; ;; 安装 Cape 是解决“不弹窗”的终极方案
+;; (use-package cape
+;;   :ensure t
+;;   :init
+;;   ;; 这一步极其重要：手动将所有后端缝合在一起
+;;   (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+;;   (add-to-list 'completion-at-point-functions #'cape-file)
+;;   (add-to-list 'completion-at-point-functions #'yasnippet-capf)
+;;   (add-to-list 'completion-at-point-functions #'cape-keyword)
+;;   )
 
 (use-package avy
   :ensure t
@@ -197,7 +224,21 @@
    :preview-key 'any)
   (setq consult-find-args "fd --color=never --full-path --path-separator /")
   )
+(use-package consult-notes
+  :ensure t
+  :after consult
+  :init
+  ;; 1. 配置你的笔记数据源（永久目录）
+  (setq consult-notes-file-dir-sources
+        '(("task" ?t "~/org/task/")
+          ("roam" ?n "~/org/roam/")
+          ))
 
+  :bind
+  ;; 2. 绑定快捷键方便调用
+  ;; (("C-c n f" . consult-notes)                    ; 选择源并搜索文件
+  ;;  ("C-c n s" . consult-notes-search-in-all-notes))
+  ) ; 所有源中搜索内容
 (use-package expand-region
   :ensure t  ;; 如果本地没有，自动通过 ELPA/MELPA 安装
   :bind ("C-=" . er/expand-region)
@@ -222,22 +263,22 @@
   ;;  xs(setq racket-program "racket")
   )
 
-(use-package eglot
-  :ensure nil ; Emacs 29+ 内置
-  :hook (python-mode . eglot-ensure)
-  :config
+;; (use-package eglot
+;;   :ensure nil ; Emacs 29+ 内置
+;;   :hook (python-mode . eglot-ensure)
+;;   :config
 
-  ;; 强制 Python 使用 pyright（必须！FastAPI 全靠它）
-  ;; (add-to-list 'eglot-server-programs
-  ;;              '((python-mode python-ts-mode) . ("pyright" "--stdio")))
-  
-  ;; 配合 envrc，确保 eglot 启动前环境变量已就绪
-  (add-hook 'eglot--managed-mode-hook
-            (lambda () (when (fboundp 'envrc-mode) (envrc-mode 1)))))
+;;   ;; 强制 Python 使用 pyright（必须！FastAPI 全靠它）
+;;   ;; (add-to-list 'eglot-server-programs
+;;   ;;              '((python-mode python-ts-mode) . ("pyright" "--stdio")))
 
-(use-package envrc
-  
-  :hook (after-init . envrc-global-mode))
+;;   ;; 配合 envrc，确保 eglot 启动前环境变量已就绪
+;;   (add-hook 'eglot--managed-mode-hook
+;;             (lambda () (when (fboundp 'envrc-mode) (envrc-mode 1)))))
+
+;; (use-package envrc
+
+;;   :hook (after-init . envrc-global-mode))
 
 
 (global-set-key (kbd "C-.") 'duplicate-line)
@@ -272,22 +313,36 @@
       '(rime-predicate-space-after-cc-p)
       )
 
-;; 1. 安装并配置 nix-mode
-(use-package nix-mode
-  ;;  :ensure t
-  :mode "\\.nix\\'")
+;; ;; 1. 安装并配置 nix-mode
+;; (use-package nix-mode
+;;   ;;  :ensure t
+;;   :mode "\\.nix\\'")
 
-;; 2. 配置异步格式化工具 Apheleia (推荐)
-(use-package apheleia
-  :ensure t
-  :config
-  ;; 显式指定 nix-mode 使用 alejandra
-  (setf (alist-get 'nix-mode apheleia-formatters)
-        '("alejandra" "-"))
-  (apheleia-global-mode +1))
+;; ;; 2. 配置异步格式化工具 Apheleia (推荐)
+;; (use-package apheleia
+;;   :ensure t
+;;   :config
+;;   ;; 显式指定 nix-mode 使用 alejandra
+;;   (setf (alist-get 'nix-mode apheleia-formatters)
+;;         '("alejandra" "-"))
+;;   (apheleia-global-mode +1))
 
 
 ;;; --- Org-mode 综合配置中心 ---
+;; 先创建所需目录
+(dolist (dir '("~/org" "~/org/task" "~/org/roam"))
+  (let ((p (expand-file-name dir)))
+    (unless (file-directory-p p)
+      (make-directory p t)
+      (message "Created dir: %s" p))))
+
+;; 再创建根目录下的 org 文件
+(dolist (file '("~/org/todo.org" "~/org/inbox.org"))
+  (let ((p (expand-file-name file)))
+    (unless (file-exists-p p)
+      ;; 写入空内容生成文件
+      (write-region "" nil p)
+      (message "Created file: %s" p))))
 
 (use-package org
   :ensure nil
@@ -316,16 +371,26 @@
   :config
   ;; --- ID 与 链接系统 (加载 org-id 以支持回溯) ---
   (require 'org-id)
-  (setq org-id-link-to-org-use-id t)
+  (setq org-id-link-to-org-use-id 'create-if-interactive)
   (setq org-id-track-globally t)
 
   ;; --- Capture 模板配置 ---
   (setq org-capture-templates
         '(("t" "todo" entry (file "~/org/todo.org")
            "* TODO %:description\n  :PROPERTIES:\n  :SOURCE: %a\n  :CREATED: %U\n  :END:\n" 
-           :immediate-finish t :prepend t)))
-
-  ;; --- 自动化函数组：状态变更触发器 ---
+           :immediate-finish t :prepend t)
+	  ("n" "New task note" plain
+           (file (lambda ()
+                   (let* ((name (read-string "任务名称: "))
+                          (date-str (format-time-string "%Y-%m-%d"))
+                          (clean-name (replace-regexp-in-string
+                                       "[^a-zA-Z0-9\u4e00-\u9fa5-]" ""
+                                       (replace-regexp-in-string " " "-" name))))
+                     (expand-file-name
+                      (concat date-str "-" clean-name ".org")
+                      "~/org/task/"))))
+           "#+DATE: %U\n\n* %?")
+	  ))  ;; --- 自动化函数组：状态变更触发器 ---
   (defun my-org-todo-automation-h ()
     "整合：NEXT 自动排程 + DOING 自动计时"
     (cond 
@@ -367,6 +432,12 @@
               (message "内容已归并，ID 已清理。")))))))
   )
 
+(use-package ox-gfm
+  :ensure t
+  :after org
+  :config
+  (add-to-list 'org-export-backends 'gfm)
+  )
 ;; (use-package org-modern
 ;;   :ensure t
 ;;   :hook (org-mode . org-modern-mode)
@@ -384,7 +455,7 @@
 (use-package org-roam
   :ensure nil
   :custom
-  (org-roam-directory (file-truename "~/org"))
+  (org-roam-directory (file-truename "~/org/roam"))
   (org-roam-capture-templates
    '(("d" "default" plain "%?"
       :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
@@ -407,7 +478,7 @@
   :ensure t
   :bind ("M-o" . ace-window)
   :config
-  (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))) ; 使用左手常用键
+  (setq aw-keys '(?a ?r ?s ?t ?g ?m ?n ?e ?i))) ; 使用左手常用键
 
 (setq tab-bar-show 1)          ;; 始终显示标签栏
 (setq tab-bar-new-button-show nil) ;; 保持简洁
