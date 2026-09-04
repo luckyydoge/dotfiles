@@ -47,3 +47,4 @@ if not ($zoxide_cache | path exists) {
 
 $env.PATH = ($env.PATH | prepend $"($env.HOME)/.bun/bin")
 
+$env.OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS = true

@@ -1,8 +1,19 @@
-(menu-bar-mode 0)
-(tool-bar-mode 0)
+;;; GC 调优：gcmh 接管（交互时高阈值不停顿，空闲时自动回收）
+;; 启动期的 GC 阈值由 early-init.el 拉满，这里初始化完成后交给 gcmh
+(use-package gcmh
+  :ensure t
+  :hook (after-init . gcmh-mode))
+
 (scroll-bar-mode 0)
+(add-hook 'prog-mode-hook 'whitespace-mode)
+;; (add-hook 'yaml-ts-mode-hook 'whitespace-mode)
+;; 显示所有空格和制表符的符号
+(setq whitespace-style '(face spaces tabs tab-mark trailing ))
 (column-number-mode 1)
 (global-visual-line-mode 1)
+(add-hook 'prog-mode-hook (lambda ()
+                            (visual-line-mode -1)
+                            (setq truncate-lines t)))
 (setq display-line-numbers-type 'relative)
 (global-display-line-numbers-mode 1)
 (setq custom-file "./custom.el")
@@ -15,12 +26,8 @@
 (add-hook 'prog-mode-hook #'hs-minor-mode)
 
 ;;; --- 基础视觉与交互配置 ---
-(menu-bar-mode 0)
-(tool-bar-mode 0)
-(scroll-bar-mode 0)
-(column-number-mode 1)
+;; menu-bar/tool-bar/scroll-bar 已在 early-init.el 前移关闭
 (setq visible-bell t)
-(setq display-line-numbers-type 'relative)
 (setq org-src-fontify-natively t)
 (global-display-line-numbers-mode 1)
 (which-key-mode 1)
@@ -62,6 +69,7 @@
 (global-set-key (kbd "M-7") (lambda () (interactive) (tab-bar-select-tab 7)))
 (global-set-key (kbd "M-8") (lambda () (interactive) (tab-bar-select-tab 8)))
 (global-set-key (kbd "M-9") (lambda () (interactive) (tab-bar-select-tab 9)))
+(global-set-key (kbd "M-t") 'tab-bar-new-tab)
 
 ;; 确定文件夹存在，如果不存在则创建
 (let ((target-dir "~/.config/emacs/auto-save/"))
@@ -104,9 +112,25 @@
   :ensure t
   :config
   ;; 设置你喜欢的风味：'latte, 'frappe, 'macchiato, 或 'mocha (默认)
-  (setq catppuccin-flavor 'mocha) 
-  (load-theme 'gruvbox-dark-medium t))
-
+  (load-theme 'gruvbox-dark-soft t))
+;; (use-package solarized-theme
+;;   :ensure t
+;;   :init
+;;   ;; 自定义选项必须在加载主题前设置
+;;   (setq solarized-distinct-fringe-background t)   ; fringe 与背景色区分
+;;   (setq solarized-high-contrast-mode-line t)      ; mode-line 高对比度
+;;   ;; 可选：减少粗体、增加斜体等
+;;   ;; (setq solarized-use-less-bold t)
+;;   ;; (setq solarized-use-more-italic t)
+;;   :config
+;;   ;; 默认加载暗色主题（也可改为 'solarized-light）
+;;   (load-theme 'solarized-light t)
+;;   ;; 绑定快捷键快速切换亮暗
+;;   (global-set-key (kbd "<f5>") #'solarized-toggle-theme))
+;; (use-package zenburn-theme
+;;   :ensure t
+;;   :config
+;;   (load-theme 'zenburn t))
 ;;; --- 垂直补全系统 (Minibuffer UI) ---
 (use-package vertico
   :ensure t
@@ -142,6 +166,34 @@
 (use-package markdown-mode
   :ensure t)
 
+(use-package web-mode
+  :ensure t  ; 如果未安装则自动安装[reference:3][reference:4]
+  :mode ("\\.html?\\'"     . web-mode)  ; 自动关联 .html 文件[reference:5][reference:6]
+        ("\\.vue\\'"       . web-mode)  ; 自动关联 .vue 文件[reference:7]
+        ("\\.jsx\\'"       . web-mode)  ; 自动关联 .jsx 文件[reference:8]
+        ("\\.djhtml\\'"    . web-mode)  ; 自动关联 Django 模板文件[reference:9]
+	)
+
+;;; --- Tree-sitter modes (Emacs 30 内置 treesit) ---
+(setq treesit-font-lock-level 4)
+;; 内置基础模式存在 → remap 到 ts 模式
+(add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
+(add-to-list 'major-mode-remap-alist '(css-mode    . css-ts-mode))
+(add-to-list 'major-mode-remap-alist '(js-mode     . js-ts-mode))
+;; 无基础模式的语言 → 后缀直接关联（实测 30.2 默认无任何 ts-mode 关联）
+(dolist (e '(("\\.go\\'"   . go-ts-mode)         ("\\.java\\'" . java-ts-mode)
+             ("\\.ts\\'"   . typescript-ts-mode) ("\\.tsx\\'"  . tsx-ts-mode)
+             ("\\.json\\'" . json-ts-mode)       ("\\.yaml\\'" . yaml-ts-mode)
+             ("\\.yml\\'"  . yaml-ts-mode)       ("\\.lua\\'"  . lua-ts-mode)
+	     ("\\.nix\\'"  . nix-ts-mode)
+	     ))
+  (add-to-list 'auto-mode-alist e))
+
+;; bash: sh-mode 里按 shebang 判定，是 bash 才切 bash-ts-mode
+;; （POSIX sh / dash / zsh 文件继续用 sh-mode，避免错误高亮）
+(add-hook 'sh-mode-hook
+          (lambda () (when (eq sh-shell 'bash) (bash-ts-mode))))
+
 ;; (add-to-list 'load-path "./lsp-bridge")
 (add-to-list 'load-path (expand-file-name "lsp-bridge" (file-name-directory load-file-name)))
 
@@ -150,6 +202,11 @@
 
 (require 'lsp-bridge)
 (global-lsp-bridge-mode)
+
+(define-key lsp-bridge-mode-map (kbd "M-.") 'lsp-bridge-find-def)
+(define-key lsp-bridge-mode-map (kbd "M-,") 'lsp-bridge-find-def-return)
+(define-key lsp-bridge-mode-map (kbd "M-p") 'lsp-bridge-peek)
+(setq lsp-bridge-nix-lsp-server "nil")
 (setq acm-backend-order '( "template-first-part-candidates" "mode-first-part-candidates"
  "tabnine-candidates" "copilot-candidates" "codeium-candidates"
  "template-second-part-candidates" "mode-second-part-candidates")
@@ -247,12 +304,55 @@
   ;; 选中多了按这个可以缩回去
   (global-set-key (kbd "C--") 'er/contract-region))
 
-(use-package lua-mode
+;; Lua: 换用内置 lua-ts-mode（tree-sitter），保留 2 空格缩进习惯
+(add-hook 'lua-ts-mode-hook
+          (lambda () (setq-local lua-ts-indent-offset 2)))
+
+;;; --- 代码折叠: treesit-fold(语法引擎) + kirigami(统一键位) ---
+(use-package treesit-fold
   :ensure t
-  :mode "\\.lua\\'"
-  :interpreter "lua"
+  :hook ((go-ts-mode python-ts-mode java-ts-mode js-ts-mode typescript-ts-mode
+          tsx-ts-mode lua-ts-mode css-ts-mode json-ts-mode bash-ts-mode)
+         . treesit-fold-mode)
   :config
-  (setq lua-indent-level 2)) ; 设置缩进为 2（Lua 社区惯例）
+  ;; fringe 折叠指示箭头
+  (add-hook 'treesit-fold-mode-hook #'treesit-fold-indicators-mode))
+
+;; kirigami 不是折叠引擎，是统一键位调度层：
+;; ts-mode 缓冲区 → treesit-fold；org/elisp → outline/hs 等既有后端
+;; 默认键位: C-c z a 切换 / c 折叠 / o 展开 / r 递归展开 / m 全部折叠
+(use-package kirigami
+  :ensure t
+  :init
+  (kirigami-global-mode 1))
+(global-set-key (kbd "C-c z o") 'kirigami-open-fold)     ; Open fold at point
+(global-set-key (kbd "C-c z O") 'kirigami-open-fold-rec) ; Open fold recursively
+(global-set-key (kbd "C-c z r") 'kirigami-open-folds)    ; Open all folds
+(global-set-key (kbd "C-c z c") 'kirigami-close-fold)    ; Close fold at point
+(global-set-key (kbd "C-c z m") 'kirigami-close-folds)   ; Close all folds
+(global-set-key (kbd "C-c z a") 'kirigami-toggle-fold)   ; Toggle fold at point
+
+;;; --- 缩进参考线: indent-bars (GNU ELPA) ---
+;; 注意: 会替换 font-lock-fontify-region-function，放在 init.el 靠后位置
+(use-package indent-bars
+  :ensure t
+  :custom
+  (indent-bars-treesit-support t)
+  (indent-bars-treesit-ignore-blank-lines-types '("module"))
+  (indent-bars-treesit-scope
+   '((python-ts-mode function_definition class_definition for_statement
+                     if_statement with_statement while_statement)
+     (go-ts-mode function_declaration method_declaration
+                 if_statement for_statement block)
+     (java-ts-mode method_declaration class_declaration
+                   if_statement for_statement while_statement)
+     (lua-ts-mode function_declaration if_statement for_statement
+                  while_statement do_statement)
+     (bash-ts-mode function_definition if_statement case_statement
+                   for_statement while_statement)))
+  ;; 若 Cairo+高DPI 下 stipple 花屏: (indent-bars-prefer-character t)
+  :hook ((python-ts-mode go-ts-mode java-ts-mode lua-ts-mode bash-ts-mode)
+         . indent-bars-mode))
 
 ;;; --- Racket / Scheme (SICP 学习) ---
 (use-package racket-mode
@@ -302,8 +402,9 @@
 (global-set-key (kbd "M-i") #'toggle-input-method)
 (setq rime-inline-ascii-trigger 'shift-r)
 (setq rime-disable-predicates
-      '(rime-predicate-prog-in-code-p
-	rime-predicate-after-alphabet-char-p
+      '(
+	;; rime-predicate-prog-in-code-p
+	;; rime-predicate-after-alphabet-char-p
 	meow-normal-mode-p
         meow-motion-mode-p
         meow-keypad-mode-p
@@ -484,6 +585,19 @@
 (setq tab-bar-new-button-show nil) ;; 保持简洁
 (setq tab-bar-tab-hints t)     ;; 显示数字编号 (Meta-1, Meta-2 切换)
 
+(use-package projectile
+  :ensure t
+  :init
+  (projectile-mode +1)
+  :custom
+  ;; 使用更现代的索引方式（配合 ripgrep/fd）
+  (projectile-indexing-method 'alien)
+  (projectile-enable-caching t)
+  (projectile-completion-system 'vertico) ; 与你的 vertico 集成
+  :bind-keymap
+  ("C-c p" . projectile-command-map) ; 统一前缀，方便记忆
+  )
+
 ;; 编写一个优雅的切换函数：切换项目时自动创建一个新 Tab 并命名
 (defun my/project-switch-in-tab ()
   (interactive)
@@ -518,7 +632,7 @@
   :ensure t
   :config
   (defun meow-setup ()
-    (setq meow-cheatsheet-layout meow-cheatsheet-layout-colemak)
+    (setq meow-cheatsheet-layout meow-cheatsheet-layout-colemak-dh)
     (meow-motion-define-key
      ;; Use e to move up, n to move down.
      ;; Since special modes usually use n to move down, we only overwrite e here.
@@ -598,3 +712,71 @@
   )
 (meow-setup)
 (meow-global-mode 1)
+
+;;; --- VCS / AI：magit + vc-jj + majutsu + agent-shell ---
+
+;; magit：纯 git 仓库的主力（也是 majutsu 的运行依赖）
+(use-package magit
+  :ensure t
+  :bind ("C-x g" . magit-status))
+
+;; vc-jj：VC 基线，让 C-x v 和 project.el 原生识别 jj 仓库（GNU ELPA）
+(use-package vc-jj
+  :ensure t)
+
+;; majutsu：jj 仓库的 magit 风格 UI（不在 MELPA，从 GitHub pin v0.6.0）
+;; 注意：v0.6.0 的入口是 majutsu-log（别名 majutsu），没有 majutsu-status
+(use-package majutsu
+  :vc (:url "https://github.com/0WD0/majutsu" :rev "v0.6.0")
+  :after magit
+  :bind ("C-x J" . majutsu-log))
+(setq ediff-window-setup-function 'ediff-setup-windows-plain)
+;; agent-shell：opencode 的 Emacs 原生客户端（MELPA，走 server API 不嵌 TUI）
+(with-eval-after-load 'majutsu-ediff
+  (defun my/majutsu-ediff-merge-files (left base right output)
+    "修复版：加 recursive-edit 阻塞等用户退出 ediff。"
+    (let ((left (expand-file-name left))
+          (base (expand-file-name base))
+          (right (expand-file-name right))
+          (output (expand-file-name output)))
+      (add-hook 'ediff-quit-hook #'majutsu-ediff--exit-recursive-edit)
+      (unwind-protect
+          (progn
+            (ediff-merge-files-with-ancestor left right base nil output)
+            (recursive-edit))
+        (remove-hook 'ediff-quit-hook #'majutsu-ediff--exit-recursive-edit))))
+  (advice-add 'majutsu-ediff-merge-files :override #'my/majutsu-ediff-merge-files))
+(use-package agent-shell
+  :ensure t
+  :commands (agent-shell-opencode-start-agent)
+  :bind ("C-c C-a" . agent-shell-opencode-start-agent)
+  :config
+  (setq agent-shell-opencode-environment
+      (agent-shell-make-environment-variables
+       "LD_LIBRARY_PATH"
+       (concat "/run/current-system/sw/share/nix-ld/lib"
+               (if (getenv "LD_LIBRARY_PATH")
+                   (concat ":" (getenv "LD_LIBRARY_PATH"))
+                 ""))))
+  )
+
+;; 按仓库类型自动分派：有 .jj 用 majutsu，纯 git 用 magit
+(defun my/vcs-status ()
+  "根据当前仓库类型打开 majutsu-log 或 magit-status。"
+  (interactive)
+  (if (locate-dominating-file default-directory ".jj")
+      (majutsu-log)
+    (magit-status)))
+(global-set-key (kbd "C-c j") #'my/vcs-status)
+(global-set-key (kbd "C-x C-b") 'ibuffer)
+
+;;; --- diff-hl：buffer 内内联显示 hunk 变更 ---
+(use-package diff-hl
+  :ensure t
+  :hook ((prog-mode . diff-hl-mode)
+         (org-mode . diff-hl-mode)
+         (magit-post-refresh . diff-hl-magit-post-refresh))
+  :config
+  (diff-hl-margin-mode -1)
+  (setq diff-hl-show-hunk-inline t))
+

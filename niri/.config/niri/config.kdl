@@ -41,8 +41,8 @@ input {
     mouse {
         // off
         // natural-scroll
-        // accel-speed 0.2
-        // accel-profile "flat"
+        accel-speed 0.2
+        accel-profile "flat"
         // scroll-method "no-scroll"
     }
 
@@ -108,7 +108,7 @@ output "eDP-1" {
 layout {
     // Set gaps around windows in logical pixels.
     gaps 3
-
+background-color "transparent"
     // When to center a column when changing focus, options are:
     // - "never", default behavior, focusing an off-screen column will keep at the left
     //   or right edge of the screen.
@@ -261,14 +261,13 @@ layout {
 // See the binds section below for more spawn examples.
 
 // This line starts waybar, a commonly used bar for Wayland compositors.
-// spawn-at-startup "waybar"
-// spawn-at-startup "footclient"
-// spawn-at-startup "xwayland-satellite"
+spawn-at-startup "noctalia"
 spawn-at-startup "udiskie"
-spawn-at-startup "easyeffects" "--gapplication-service"
-spawn-sh-at-startup "swaybg -i $HOME/.config/niri/wallpapers/bg"
-spawn-at-startup "swww-daemon"
-spawn-at-startup "copyq"
+// spawn-at-startup "foot" "--server"
+// spawn-at-startup "easyeffects" "--gapplication-service"
+// spawn-sh-at-startup "swaybg -i $HOME/.config/niri/wallpapers/bg"
+// spawn-at-startup "swww-daemon"
+// spawn-at-startup "copyq"
 spawn-at-startup "fcitx5" "-rd"
 
 environment {
@@ -289,7 +288,9 @@ cursor {
     xcursor-theme "Cosmic"
     xcursor-size 60
 }
-
+hotkey-overlay {
+    skip-at-startup
+}
 
 
 // Uncomment this line to ask the clients to omit their client-side decorations if possible.
@@ -337,7 +338,26 @@ window-rule {
     match app-id=r#"^org\.wezfurlong\.wezterm$"#
     default-column-width {}
 }
+/-window-rule {
+  // Rounded corners for a modern look.
+  geometry-corner-radius 20
 
+  // Clips window contents to the rounded corner boundaries.
+  clip-to-geometry true
+}
+
+// Floating Noctalia settings window.
+window-rule {
+  match app-id="dev.noctalia.Noctalia"
+  open-floating true
+  default-column-width { fixed 1080; }
+  default-window-height { fixed 920; }
+}
+
+debug {
+  // Allows notification actions and window activation from Noctalia.
+  honor-xdg-activation-with-invalid-serial
+}
 // Open the Firefox picture-in-picture player as floating by default.
 window-rule {
     // This app-id regular expression will work for both:
@@ -347,9 +367,14 @@ window-rule {
     match app-id="zen" title="^Library$"
     open-floating true
 }
-
+// 让微信的所有子窗口（非主窗口）默认浮动
 window-rule {
     match app-id="wechat"
+    exclude title="^微信$"  // 排除标题完全为“微信”的主窗口
+    open-focused true
+    open-floating true
+}
+window-rule {
     match app-id="easy effects"
     match app-id="QQ"
     open-focused false
@@ -374,7 +399,7 @@ workspace "browser"
 window-rule {
     match app-id="foot"
     exclude title="nvim"
-    opacity 0.8
+    opacity 0.9
 }
 
 // Example: block out two password managers from screen capture.
@@ -396,9 +421,24 @@ window-rule {
     clip-to-geometry true
 }
 
-layer-rule {
+/-layer-rule {
     match namespace="^swww-daemon$"
     place-within-backdrop true
+}
+
+// Place the regular wallpaper on the backdrop.
+layer-rule {
+  match namespace="^noctalia-wallpaper"
+  place-within-backdrop true
+}
+
+// Set transparent workspace background color so the backdrop is visible at all times.
+
+// Optionally, disable workspace shadows in the overview.
+overview {
+  workspace-shadow {
+    off
+  }
 }
 
 binds {
@@ -415,14 +455,18 @@ binds {
     // Mod-Shift-/, which is usually the same as Mod-?,
     // shows a list of important hotkeys.
     Mod+Shift+Slash { show-hotkey-overlay; }
-
+    Mod+Space { spawn-sh "noctalia msg panel-toggle launcher"; }
+    Mod+S { spawn-sh "noctalia msg panel-toggle control-center"; }
+//    Mod+Comma { spawn-sh "noctalia msg settings-toggle"; }
     // Suggested binds for running programs: terminal, app launcher, screen locker.
     Mod+T hotkey-overlay-title="Open a Terminal: foot" { spawn "foot"; }
-    Mod+D hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
-    Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn-sh "niri msg action power-off-monitors && swaylock -i $HOME/.config/niri/wallpapers/lock"; }
+//    Mod+D hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
+//    Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn-sh "niri msg action power-off-monitors && swaylock -i $HOME/.config/niri/wallpapers/lock"; }
     Mod+Return { spawn "footclient"; }
-    Mod+B { spawn-sh "killall waybar || waybar"; }
-    Mod+Shift+W { spawn "~/.scripts/status.sh"; }
+//    Mod+B { spawn-sh "killall waybar || waybar"; }
+//    Mod+Shift+W { spawn "~/.scripts/status.sh"; }
+      Mod+L hotkey-overlay-title="Lock the Screen: noctalia" { spawn-sh "noctalia msg session lock"; }
+      Mod+Shift+L { power-off-monitors; }
 
     // You can also use a shell. Do this if you need pipes, multiple commands, etc.
     // Note: the entire command goes as a single argument in the end.
@@ -451,19 +495,19 @@ binds {
     Mod+Down  { focus-window-down; }
     Mod+Up    { focus-window-up; }
     Mod+Right { focus-column-right; }
-    Mod+H     { focus-column-left; }
-    Mod+J     { focus-window-down; }
-    Mod+K     { focus-window-up; }
-    Mod+L     { focus-column-right; }
+    Mod+B     { focus-column-left; }
+    Mod+N     { focus-window-down; }
+    Mod+P     { focus-window-up; }
+    Mod+F     { focus-column-right; }
 
     Mod+Ctrl+Left  { move-column-left; }
     Mod+Ctrl+Down  { move-window-down; }
     Mod+Ctrl+Up    { move-window-up; }
     Mod+Ctrl+Right { move-column-right; }
-    Mod+Ctrl+H     { move-column-left; }
-    Mod+Ctrl+J     { move-window-down; }
-    Mod+Ctrl+K     { move-window-up; }
-    Mod+Ctrl+L     { move-column-right; }
+    Mod+Ctrl+B     { move-column-left; }
+    Mod+Ctrl+N     { move-window-down; }
+    Mod+Ctrl+P     { move-window-up; }
+    Mod+Ctrl+F     { move-column-right; }
 
     // Alternative commands that move across workspaces when reaching
     // the first or last window in a column.
@@ -476,24 +520,28 @@ binds {
     Mod+End  { focus-column-last; }
     Mod+Ctrl+Home { move-column-to-first; }
     Mod+Ctrl+End  { move-column-to-last; }
+    Mod+A { focus-column-first; }
+    Mod+E  { focus-column-last; }
+    Mod+Ctrl+A { move-column-to-first; }
+    Mod+Ctrl+E  { move-column-to-last; }
 
     Mod+Shift+Left  { focus-monitor-left; }
     Mod+Shift+Down  { focus-monitor-down; }
     Mod+Shift+Up    { focus-monitor-up; }
     Mod+Shift+Right { focus-monitor-right; }
-    Mod+Shift+H     { focus-monitor-left; }
-    Mod+Shift+J     { focus-monitor-down; }
-    Mod+Shift+K     { focus-monitor-up; }
-    Mod+Shift+L     { focus-monitor-right; }
+    Mod+Shift+B     { focus-monitor-left; }
+    Mod+Shift+N     { focus-monitor-down; }
+    Mod+Shift+P     { focus-monitor-up; }
+    Mod+Shift+F     { focus-monitor-right; }
 
     Mod+Shift+Ctrl+Left  { move-column-to-monitor-left; }
     Mod+Shift+Ctrl+Down  { move-column-to-monitor-down; }
     Mod+Shift+Ctrl+Up    { move-column-to-monitor-up; }
     Mod+Shift+Ctrl+Right { move-column-to-monitor-right; }
-    Mod+Shift+Ctrl+H     { move-column-to-monitor-left; }
-    Mod+Shift+Ctrl+J     { move-column-to-monitor-down; }
-    Mod+Shift+Ctrl+K     { move-column-to-monitor-up; }
-    Mod+Shift+Ctrl+L     { move-column-to-monitor-right; }
+    Mod+Shift+Ctrl+B     { move-column-to-monitor-left; }
+    Mod+Shift+Ctrl+N     { move-column-to-monitor-down; }
+    Mod+Shift+Ctrl+P     { move-column-to-monitor-up; }
+    Mod+Shift+Ctrl+F     { move-column-to-monitor-right; }
 
     // Alternatively, there are commands to move just a single window:
     // Mod+Shift+Ctrl+Left  { move-window-to-monitor-left; }
@@ -505,12 +553,12 @@ binds {
 
     Mod+Page_Down      { focus-workspace-down; }
     Mod+Page_Up        { focus-workspace-up; }
-    Mod+U              { focus-workspace-down; }
-    Mod+I              { focus-workspace-up; }
+    Mod+U              { focus-workspace-up; }
+    Mod+D              { focus-workspace-down; }
     Mod+Ctrl+Page_Down { move-column-to-workspace-down; }
     Mod+Ctrl+Page_Up   { move-column-to-workspace-up; }
-    Mod+Ctrl+U         { move-column-to-workspace-down; }
-    Mod+Ctrl+I         { move-column-to-workspace-up; }
+    Mod+Ctrl+U         { move-column-to-workspace-up; }
+    Mod+Ctrl+D         { move-column-to-workspace-down; }
 
     // Alternatively, there are commands to move just a single window:
     // Mod+Ctrl+Page_Down { move-window-to-workspace-down; }
@@ -518,8 +566,8 @@ binds {
 
     Mod+Shift+Page_Down { move-workspace-down; }
     Mod+Shift+Page_Up   { move-workspace-up; }
-    Mod+Shift+U         { move-workspace-down; }
-    Mod+Shift+I         { move-workspace-up; }
+    Mod+Shift+U         { move-workspace-up; }
+    Mod+Shift+D         { move-workspace-down; }
 
     // You can bind mouse wheel scroll ticks using the following syntax.
     // These binds will change direction based on the natural-scroll setting.
@@ -600,12 +648,12 @@ binds {
     Mod+R { switch-preset-column-width; }
     Mod+Shift+R { switch-preset-window-height; }
     Mod+Ctrl+R { reset-window-height; }
-    Mod+F { maximize-column; }
-    Mod+Shift+F { fullscreen-window; }
+    Mod+Z { maximize-column; }
+    Mod+Shift+Z { fullscreen-window; }
 
     // Expand the focused column to space not taken up by other fully visible columns.
     // Makes the column "fill the rest of the space".
-    Mod+Ctrl+F { expand-column-to-available-width; }
+    Mod+Ctrl+Z { expand-column-to-available-width; }
 
     Mod+C { center-column; }
 
@@ -664,9 +712,11 @@ binds {
 
     // Powers off the monitors. To turn them back on, do any input like
     // moving the mouse or pressing any other key.
-    Mod+Shift+P { power-off-monitors; }
+//    Mod+Shift+P { power-off-monitors; }
 }
 switch-events {
     // lid-close { spawn "swaylock" "-i" "$HOME/.config/niri/wallpapers/lock"; }
     // lid-open { spawn "notify-send" "The laptop lid is open!"; }
 }
+
+include "noctalia.kdl"
