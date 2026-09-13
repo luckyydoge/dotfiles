@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# 持续模式：wl-kbptr + OpenCV 目标检测，点击一次后等待画面刷新再重新检测。
+# 按 Esc 退出。
+#
+# 为什么要 sleep：点击后界面往往需要几十到几百毫秒才重绘，
+# 立刻重新 screencopy 会拿到旧画面，识别出的位置和新界面对不上。
+#
+# 延迟可用环境变量覆盖：
+#   WL_KBPTR_DELAY=0.8 wl-kbptr-loop
+# 额外参数会透传给 wl-kbptr：
+#   wl-kbptr-loop -O DP-1
+#   wl-kbptr-loop -o mode_click.button=right
+
+set -u
+
+delay="${WL_KBPTR_DELAY:-0.5}"
+
+while wl-kbptr \
+    -o cancellation_status_code=1 \
+    -o modes=floating,click \
+    -o mode_floating.source=detect \
+    "$@"; do
+    sleep "$delay"
+done

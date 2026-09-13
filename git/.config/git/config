@@ -12,3 +12,5 @@
 ; 	proxy = http://127.0.0.1:20701
 ; [https]
 ; 	proxy = http://127.0.0.1:20701
+[includeIf "gitdir:~/work/"]
+	path = ~/.config/git/work.config

@@ -5,6 +5,9 @@
 !/init.el
 !/early-init.el
 
+# 2.1 模块化配置文件（my-org-notes / my-lsp-bridge / my-meow / my-prodigy / my-etaf）
+!/my-etaf.el
+
 # 3. 允许追踪你存放自己配置、片段、主题的文件夹 (如果有的话)
 !/lisp/
 !/snippets/

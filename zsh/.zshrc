@@ -15,7 +15,7 @@ source <(carapace zsh)
 
 eval "$(atuin init zsh)"
 
-alias ls='eza'
+# alias ls='eza'
 # 替代传统 ll，带标题、图标和 Git 状态
 alias ll='eza -l --icons --header --git'
 
@@ -28,12 +28,20 @@ alias lt='eza --tree --level 3 --icons'
 # 仅显示目录并按时间排序
 alias lsd='eza -D --sort=modified'
 
-alias cd='z'
+# alias cd='zi'
 
 alias e='emacsclient -t'
 
+# trash
+alias del='trash-put'
+alias trash='trash-put'
+alias trl='trash-list'
+alias trr='trash-restore'
+alias tre='trash-empty'
+
+# opencode
 alias opencode='LD_LIBRARY_PATH="/run/current-system/sw/share/nix-ld/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" opencode'
-alias oc='LD_LIBRARY_PATH="/run/current-system/sw/share/nix-ld/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" opencode'
+alias oc='opencode2'
 
 eval "$(starship init zsh)"
 source $HOME/dotfiles/zsh/.fzf.zsh
@@ -49,12 +57,14 @@ function y() {
 }
 
 # foot 自动进入 zellij；ZELLIJ 变量防止 pane 内嵌套，detach 后落在裸 zsh
-if [[ -o interactive && -z "$ZELLIJ" ]]; then
+if [[ -o interactive && -z "$ZELLIJ" && -z "$EMACS_VTERM" ]]; then
   zellij attach --create main
 fi
 
 export EDITOR="emacsclient -t"
-
+export PATH="/home/zjw/.bun/bin:$PATH"
+export PATH="$HOME/.npm-global/bin:$PATH"
+export OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS=true
 # alias ll='ls -lh'
 # alias lla='ls -alh'
 # alias lg='lazygit'
@@ -89,4 +99,7 @@ export EDITOR="emacsclient -t"
 # export XCURSOR_SIZE=48
 
 # export PATH="$HOME/.scripts:$PATH"
+
+
+
 

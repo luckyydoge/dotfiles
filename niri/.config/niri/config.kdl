@@ -31,8 +31,8 @@ input {
         drag true
         // drag-lock
         natural-scroll
-        // accel-speed 0.2
-        // accel-profile "flat"
+         accel-speed 0.5
+         accel-profile "flat"
         // scroll-method "two-finger"
         // disabled-on-external-mouse
 	scroll-factor 0.5
@@ -84,7 +84,7 @@ output "eDP-1" {
     variable-refresh-rate
 
     // You can use integer or fractional scale, for example use 1.5 for 150% scale.
-    scale 1.5
+    scale 2
 
     // Transform allows to rotate the output counter-clockwise, valid values are:
     // normal, 90, 180, 270, flipped, flipped-90, flipped-180 and flipped-270.
@@ -99,16 +99,25 @@ output "eDP-1" {
     // so to put another output directly adjacent to it on the right, set its x to 1920.
     // If the position is unset or results in an overlap, the output is instead placed
     // automatically.
-    // position x=1440 y=0
+     position x=0 y=0
 }
-
+output "DP-1" {
+    mode "1920x1080@120"   // 1920x1080@60 改成 144Hz
+    scale 1
+    position x=-1440 y=0           // 外接屏在左
+}
+output "HDMI-A-1" {
+    mode "1920x1080"   // 1920x1080@60 改成 144Hz
+    scale 1
+    position x=0 y=-1080           // 外接屏在左
+}
 // Settings that influence how windows are positioned and sized.
 // Find more information on the wiki:
 // https://github.com/YaLTeR/niri/wiki/Configuration:-Layout
 layout {
     // Set gaps around windows in logical pixels.
-    gaps 3
-background-color "transparent"
+    gaps 2
+    background-color "transparent"
     // When to center a column when changing focus, options are:
     // - "never", default behavior, focusing an off-screen column will keep at the left
     //   or right edge of the screen.
@@ -157,9 +166,10 @@ background-color "transparent"
     focus-ring {
         // Uncomment this line to disable the focus ring.
         // off
+        
 
         // How many logical pixels the ring extends out from the windows.
-        width 4
+        width 2
 
         // Colors can be set in a variety of ways:
         // - CSS named colors: "red"
@@ -327,6 +337,10 @@ animations {
 // https://github.com/YaLTeR/niri/wiki/Configuration:-Window-Rules
 window-rule {
     draw-border-with-background false
+    geometry-corner-radius 0
+
+  // Clips window contents to the rounded corner boundaries.
+    clip-to-geometry true    
 }
 
 // Work around WezTerm's initial configure bug
@@ -337,13 +351,6 @@ window-rule {
     // You can get away with just app-id="wezterm" if you want.
     match app-id=r#"^org\.wezfurlong\.wezterm$"#
     default-column-width {}
-}
-/-window-rule {
-  // Rounded corners for a modern look.
-  geometry-corner-radius 20
-
-  // Clips window contents to the rounded corner boundaries.
-  clip-to-geometry true
 }
 
 // Floating Noctalia settings window.
@@ -358,6 +365,7 @@ debug {
   // Allows notification actions and window activation from Noctalia.
   honor-xdg-activation-with-invalid-serial
 }
+
 // Open the Firefox picture-in-picture player as floating by default.
 window-rule {
     // This app-id regular expression will work for both:
@@ -367,16 +375,23 @@ window-rule {
     match app-id="zen" title="^Library$"
     open-floating true
 }
+
 // 让微信的所有子窗口（非主窗口）默认浮动
 window-rule {
     match app-id="wechat"
     exclude title="^微信$"  // 排除标题完全为“微信”的主窗口
-    open-focused true
+//    open-focused true
+    open-floating true
+}
+
+window-rule {
+    match app-id="QQ"
+    exclude title="^QQ$"  // 排除标题完全为“微信”的主窗口
+//    open-focused true
     open-floating true
 }
 window-rule {
     match app-id="easy effects"
-    match app-id="QQ"
     open-focused false
 //    open-floating true
 }
@@ -388,7 +403,7 @@ window-rule {
 }
 
 window-rule {
-    match app-id="wechat"
+//    match app-id="wechat"
     match app-id="QQ"
     open-on-workspace "chat"
 }
@@ -414,22 +429,19 @@ window-rule {
     // block-out-from "screencast"
 }
 
-// Example: enable rounded corners for all windows.
-// (This example rule is commented out with a "/-" in front.)
-/-window-rule {
-    geometry-corner-radius 12
-    clip-to-geometry true
-}
-
-/-layer-rule {
-    match namespace="^swww-daemon$"
-    place-within-backdrop true
-}
-
 // Place the regular wallpaper on the backdrop.
 layer-rule {
   match namespace="^noctalia-wallpaper"
   place-within-backdrop true
+}
+
+// Blur Noctalia's Alt+Tab window switcher.
+layer-rule {
+    match namespace="noctalia-window-switcher"
+    background-effect {
+        blur true
+        xray false
+    }
 }
 
 // Set transparent workspace background color so the backdrop is visible at all times.
@@ -457,6 +469,12 @@ binds {
     Mod+Shift+Slash { show-hotkey-overlay; }
     Mod+Space { spawn-sh "noctalia msg panel-toggle launcher"; }
     Mod+S { spawn-sh "noctalia msg panel-toggle control-center"; }
+    // Noctalia window switcher（hold：按住 Alt 浏览，松开确认；快速点按切上一个窗口）
+    Alt+Tab { spawn-sh "noctalia msg window-switcher hold"; }
+    Alt+Shift+Tab { spawn-sh "noctalia msg window-switcher hold"; }
+    // Clipboard history (Noctalia built-in clipboard panel).
+    // Mod+V / Mod+Shift+V are taken by floating toggles, so V+Ctrl keeps the paste mnemonic.
+    Mod+Ctrl+V hotkey-overlay-title="Clipboard History: noctalia" { spawn-sh "noctalia msg panel-toggle clipboard"; }
 //    Mod+Comma { spawn-sh "noctalia msg settings-toggle"; }
     // Suggested binds for running programs: terminal, app launcher, screen locker.
     Mod+T hotkey-overlay-title="Open a Terminal: foot" { spawn "foot"; }
@@ -465,7 +483,10 @@ binds {
     Mod+Return { spawn "footclient"; }
 //    Mod+B { spawn-sh "killall waybar || waybar"; }
 //    Mod+Shift+W { spawn "~/.scripts/status.sh"; }
-      Mod+L hotkey-overlay-title="Lock the Screen: noctalia" { spawn-sh "noctalia msg session lock"; }
+//      Mod+L hotkey-overlay-title="Lock the Screen: noctalia" { spawn-sh "noctalia msg session lock"; }
+      Mod+L hotkey-overlay-title="Lock the Screen: noctalia" { 
+    spawn-sh "noctalia msg session lock && niri msg action power-off-monitors"; 
+}
       Mod+Shift+L { power-off-monitors; }
 
     // You can also use a shell. Do this if you need pipes, multiple commands, etc.
@@ -692,9 +713,20 @@ binds {
     // Mod+Space       { switch-layout "next"; }
     // Mod+Shift+Space { switch-layout "prev"; }
 
-    Print { screenshot; }
+    // Print { screenshot; }
     Ctrl+Print { screenshot-screen; }
     Alt+Print { screenshot-window; }
+
+    // 截图 → 框选 → Noctalia 内置标注（Enter 确认，Esc 取消；保存/复制见 [shell.screenshot]）
+    Print hotkey-overlay-title="Screenshot & Annotate: noctalia" { spawn-sh "noctalia msg screenshot-region"; }
+    // 旧的 satty 流程（保留备用，需要时换回上一行）
+    Shift+Print hotkey-overlay-title="Screenshot & Annotate: satty" { spawn-sh "grim -g \"$(slurp -o -r -c '#ff0000ff')\" -t ppm - | satty --filename - --fullscreen --copy-command wl-copy --actions-on-enter save-to-clipboard --output-filename $HOME/Pictures/Screenshots/satty-$(date +%Y%m%d-%H%M%S).png --save-after-copy --early-exit"; }
+
+    // wl-kbptr：键盘选点点击
+    Mod+Shift+X hotkey-overlay-title="Click: grid (wl-kbptr)" { spawn "wl-kbptr" "-o" "modes=tile,bisect,click"; }
+    Mod+Ctrl+X hotkey-overlay-title="Click: detect loop (wl-kbptr, Esc to exit)" { spawn-sh "WL_KBPTR_DELAY=0.5 /home/zjw/dotfiles/niri/.config/niri/wl-kbptr-loop"; }
+    // 单次版本（想保留单次检测点击时启用）
+    Mod+X hotkey-overlay-title="Click: detect (wl-kbptr)" { spawn "wl-kbptr" "-o" "modes=floating,click" "-o" "mode_floating.source=detect"; }
 
     // Applications such as remote-desktop clients and software KVM switches may
     // request that niri stops processing the keyboard shortcuts defined here

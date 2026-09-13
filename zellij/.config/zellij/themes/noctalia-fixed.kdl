@@ -1,0 +1,102 @@
+// noctalia 自定义模板：渲染 zellij 新式格式主题（显式 text_selected，修复选区不可见）
+// 渲染命令：noctalia theme -c ~/.config/noctalia/templates/zellij-fixed.toml
+themes {
+    noctalia-fixed {
+        text_unselected {
+            base "#271817"
+            background "#fff8f7"
+            emphasis_0 "#ba6a1a"
+            emphasis_1 "#a56060"
+            emphasis_2 "#b9192c"
+            emphasis_3 "#a56060"
+        }
+        text_selected {
+            base "#fff8f7"
+            background "#8d4f00"
+            emphasis_0 "#ffdad8"
+            emphasis_1 "#ffdad8"
+            emphasis_2 "#ffdad8"
+            emphasis_3 "#ffdad8"
+        }
+        ribbon_unselected {
+            base "#271817"
+            background "#ffdad8"
+            emphasis_0 "#ba1a1a"
+            emphasis_1 "#8d4f00"
+            emphasis_2 "#b9192c"
+            emphasis_3 "#8f6f6e"
+        }
+        ribbon_selected {
+            base "#fff8f7"
+            background "#8d4f00"
+            emphasis_0 "#ffdad8"
+            emphasis_1 "#ffdad8"
+            emphasis_2 "#ffdad8"
+            emphasis_3 "#ffdad8"
+        }
+        table_title {
+            base "#271817"
+            background "#fff8f7"
+            emphasis_0 "#ba6a1a"
+            emphasis_1 "#a56060"
+            emphasis_2 "#b9192c"
+            emphasis_3 "#a56060"
+        }
+        table_cell_unselected {
+            base "#271817"
+            background "#fff8f7"
+            emphasis_0 "#ba6a1a"
+            emphasis_1 "#a56060"
+            emphasis_2 "#b9192c"
+            emphasis_3 "#a56060"
+        }
+        table_cell_selected {
+            base "#fff8f7"
+            background "#8d4f00"
+            emphasis_0 "#ffdad8"
+            emphasis_1 "#ffdad8"
+            emphasis_2 "#ffdad8"
+            emphasis_3 "#ffdad8"
+        }
+        list_unselected {
+            base "#271817"
+            background "#fff8f7"
+            emphasis_0 "#ba6a1a"
+            emphasis_1 "#a56060"
+            emphasis_2 "#b9192c"
+            emphasis_3 "#a56060"
+        }
+        list_selected {
+            base "#fff8f7"
+            background "#8d4f00"
+            emphasis_0 "#ffdad8"
+            emphasis_1 "#ffdad8"
+            emphasis_2 "#ffdad8"
+            emphasis_3 "#ffdad8"
+        }
+        frame_unselected {
+            base "#8f6f6e"
+            background "#fff8f7"
+            emphasis_0 "#8f6f6e"
+            emphasis_1 "#8f6f6e"
+            emphasis_2 "#8f6f6e"
+            emphasis_3 "#8f6f6e"
+        }
+        frame_selected {
+            base "#8d4f00"
+            background "#fff8f7"
+            emphasis_0 "#8d4f00"
+            emphasis_1 "#8d4f00"
+            emphasis_2 "#8d4f00"
+            emphasis_3 "#8d4f00"
+        }
+        frame_highlight {
+            base "#ba1a1a"
+            background "#fff8f7"
+            emphasis_0 "#ba1a1a"
+            emphasis_1 "#ba1a1a"
+            emphasis_2 "#ba1a1a"
+            emphasis_3 "#ba1a1a"
+        }
+    }
+}

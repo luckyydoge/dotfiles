@@ -1,0 +1,38 @@
+// 默认布局：每个 tab 底部一条 zjstatus
+// wasm 由 home-manager 放到 ~/.local/share/zellij/plugins/zjstatus.wasm
+layout {
+    default_tab_template {
+        children
+        pane size=1 borderless=true {
+            plugin location="file:~/.local/share/zellij/plugins/zjstatus.wasm" {
+                format_left   "{mode} #[fg=#006b5f,bold]{session}"
+                format_center "{tabs}"
+                format_right  "{command_git_branch} #[fg=#507b73]{datetime}"
+                format_space  ""
+
+                border_enabled "false"
+                // 你的 config 是 pane_frames true，这里不要交给 zjstatus 去开关边框
+                hide_frame_for_single_pane "false"
+
+                mode_normal  "#[bg=#006b5f,fg=#f5fbf8,bold] "
+                mode_locked  "#[bg=#ba1a1a,fg=#f5fbf8,bold] "
+                mode_resize  "#[bg=#6b4fa0,fg=#f5fbf8,bold] "
+                mode_pane    "#[bg=#3b665f,fg=#f5fbf8,bold] "
+                mode_tab     "#[bg=#ba6a1a,fg=#f5fbf8,bold] "
+                mode_scroll  "#[bg=#507b73,fg=#f5fbf8,bold] "
+
+                tab_normal   "#[fg=#507b73] {name} "
+                tab_active   "#[fg=#171d1b,bold] {name} "
+
+                command_git_branch_command    "git rev-parse --abbrev-ref HEAD"
+                command_git_branch_format     "#[fg=#6b4fa0] {stdout} "
+                command_git_branch_interval   "10"
+                command_git_branch_rendermode "static"
+                command_git_branch_cwd        "{focused_pane_cwd}"
+
+                datetime        "#[fg=#507b73] {format}"
+                datetime_format "%m-%d %H:%M"
+            }
+        }
+    }
+}

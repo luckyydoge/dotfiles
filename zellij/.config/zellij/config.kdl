@@ -1,6 +1,7 @@
 // 迁移自 wezterm：Catppuccin Macchiato 配色 + Alt 键位
 default_shell "zsh"
 copy_command "wl-copy"
+default_layout "zjstatus"
 // theme "catppuccin-macchiato"
 
 // ui {
@@ -8,6 +9,12 @@ copy_command "wl-copy"
 //         hide true
 //     }
 // }
+pane_frame_style "full"
+pane_frames true
+simplified_ui true
+stacked_pane_list false
+// 必须用名为 emacs 的可执行文件（符号链接 -> emacsclient），zellij 才会补 +N 行号
+scrollback_editor "/home/zjw/bin/emacs -t"
 
 keybinds {
     normal {
@@ -22,6 +29,7 @@ keybinds {
         bind "Alt 7" { GoToTab 7; }
         bind "Alt 8" { GoToTab 8; }
         bind "Alt 9" { GoToTab 9; }
+	bind "Ctrl Alt c" { Copy; }
     }
 }
 

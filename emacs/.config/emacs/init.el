@@ -20,16 +20,21 @@
 (setq scroll-margin 5)
 (setq scroll-step 1)
 (setq scroll-conservatively 10000)
+(setq-default indent-tabs-mode nil)
 (setq user-emacs-directory "~/.config/emacs/")
-(global-hl-line-mode 1)
-					; 所有编程模式自动开启代码折叠
-(add-hook 'prog-mode-hook #'hs-minor-mode)
+(global-hl-line-mode ); 所有编程模式自动开启代码折叠
+;; 注意：hs-minor-mode 对不在 hs-special-modes-alist 里的 mode（如 rust-ts-mode）
+;; 会直接 signal error，报错会中断 run-mode-hooks，使同一 mode-hook 链里后面的
+;; 东西（例如 lsp-bridge 的自动启用）永远不执行。这里先判断支持与否再开。
+(add-hook 'prog-mode-hook
+          (lambda ()
+            (when (assoc major-mode hs-special-modes-alist)
+              (hs-minor-mode 1))))
 
 ;;; --- 基础视觉与交互配置 ---
 ;; menu-bar/tool-bar/scroll-bar 已在 early-init.el 前移关闭
 (setq visible-bell t)
 (setq org-src-fontify-natively t)
-(global-display-line-numbers-mode 1)
 (which-key-mode 1)
 (setopt use-short-answers t)
 (require 'ox-md)
@@ -55,7 +60,19 @@
 (windmove-default-keybindings)
 
 ;; 字体配置：Maple Mono NF CN
-(set-face-attribute 'default nil :font "Sarasa Fixed SC" :height 160 :weight 'regular)
+(set-face-attribute 'default nil :font "Sarasa Fixed SC" :height 140 :weight 'regular)
+
+;; Nerd Font 图标回退：Sarasa 没有 Nerd 字形，把 PUA 区间交给 Nerd Font。
+;; 已安装的候选：IosevkaTerm Nerd Font Mono / NotoSansM Nerd Font Mono
+;; 若之后装 nerd-fonts.symbols-only，可改成 "Symbols Nerd Font Mono"。
+(defvar my/nerd-font-family "IosevkaTerm Nerd Font Mono"
+  "用于 Nerd Font 图标回退的字体家族。")
+
+(dolist (range '((#xE000 . #xF8FF)      ; BMP PUA（主要图标）
+                 (#xF0000 . #xFFFFD)    ; Supplementary PUA-A
+                 (#x100000 . #x10FFFD))) ; Supplementary PUA-B
+  (set-fontset-font "fontset-default" range
+                    (font-spec :family my/nerd-font-family) nil 'append))
 
 (global-set-key (kbd "M-[") 'tab-bar-switch-to-prev-tab)
 (global-set-key (kbd "M-]") 'tab-bar-switch-to-next-tab)
@@ -94,7 +111,9 @@
 (require 'package)
 (setq package-archives '(("gnu"    . "https://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
                          ("nongnu" . "https://mirrors.tuna.tsinghua.edu.cn/elpa/nongnu/")
-                         ("melpa"  . "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")))
+                         ("melpa"  . "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
+                         ;; ETAF 生态（etaf/ebox/ecss/etaf-ui + 应用）作者自建归档，未上 MELPA
+                         ("etaf"   . "https://etaf.top/packages/")))
 (package-initialize)
 
 ;; (setq url-proxy-services
@@ -108,11 +127,16 @@
 ;;   ;; 设置你喜欢的风味：'latte, 'frappe, 'macchiato, 或 'mocha (默认)
 ;;   (setq catppuccin-flavor 'mocha) 
 ;;   (load-theme 'catppuccin :no-confirm))
-(use-package gruvbox-theme
+(use-package base16-theme
   :ensure t
+  :demand t  ; 确保立即加载，避免延迟导致主题无法应用
   :config
-  ;; 设置你喜欢的风味：'latte, 'frappe, 'macchiato, 或 'mocha (默认)
-  (load-theme 'gruvbox-dark-soft t))
+  (load-theme 'base16-everforest-light-medium t))
+;; (use-package gruvbox-theme
+;;   :ensure t
+;;   :config
+;;   ;; 设置你喜欢的风味：'latte, 'frappe, 'macchiato, 或 'mocha (默认)
+;;   (load-theme 'gruvbox-dark-soft t))
 ;; (use-package solarized-theme
 ;;   :ensure t
 ;;   :init
@@ -172,7 +196,10 @@
         ("\\.vue\\'"       . web-mode)  ; 自动关联 .vue 文件[reference:7]
         ("\\.jsx\\'"       . web-mode)  ; 自动关联 .jsx 文件[reference:8]
         ("\\.djhtml\\'"    . web-mode)  ; 自动关联 Django 模板文件[reference:9]
-	)
+  :config (setq web-mode-markup-indent-offset 2
+        web-mode-css-indent-offset 2
+        web-mode-code-indent-offset 2)
+)
 
 ;;; --- Tree-sitter modes (Emacs 30 内置 treesit) ---
 (setq treesit-font-lock-level 4)
@@ -188,30 +215,17 @@
 	     ("\\.nix\\'"  . nix-ts-mode)
 	     ))
   (add-to-list 'auto-mode-alist e))
+;; Emacs 30.2 的 rust-ts-mode 不会注册 .rs 后缀，且本机没装 rust-mode，
+;; 结果 .rs 落到 fundamental-mode，lsp-bridge 因为 major-mode 不匹配而不启动 rust-analyzer
+(add-to-list 'auto-mode-alist '("\\.rs\\'" . rust-ts-mode))
 
 ;; bash: sh-mode 里按 shebang 判定，是 bash 才切 bash-ts-mode
 ;; （POSIX sh / dash / zsh 文件继续用 sh-mode，避免错误高亮）
 (add-hook 'sh-mode-hook
           (lambda () (when (eq sh-shell 'bash) (bash-ts-mode))))
 
-;; (add-to-list 'load-path "./lsp-bridge")
-(add-to-list 'load-path (expand-file-name "lsp-bridge" (file-name-directory load-file-name)))
-
-(require 'yasnippet)
-(yas-global-mode 1)
-
-(require 'lsp-bridge)
-(global-lsp-bridge-mode)
-
-(define-key lsp-bridge-mode-map (kbd "M-.") 'lsp-bridge-find-def)
-(define-key lsp-bridge-mode-map (kbd "M-,") 'lsp-bridge-find-def-return)
-(define-key lsp-bridge-mode-map (kbd "M-p") 'lsp-bridge-peek)
-(setq lsp-bridge-nix-lsp-server "nil")
-(setq acm-backend-order '( "template-first-part-candidates" "mode-first-part-candidates"
- "tabnine-candidates" "copilot-candidates" "codeium-candidates"
- "template-second-part-candidates" "mode-second-part-candidates")
-)
-;; (setq lsp-bridge-python-command "python-lsp-bridge")
+;; lsp-bridge 配置已抽到 my-lsp-bridge.el（submodule 在 user-emacs-directory 下）
+(load (expand-file-name "my-lsp-bridge.el" user-emacs-directory) nil t)
 
 ;;; --- 代码行内补全 (Corfu + Cape) ---
 ;; (use-package corfu
@@ -242,9 +256,22 @@
 
 (use-package avy
   :ensure t
-  :bind (("M-j" . avy-goto-char-timer)) ; 推荐绑定 M-s
+  :bind (
+         ("M-j" . avy-goto-char-timer)
+         ("M-J" . avy-goto-subword-0)
+         ("M-g M-g" . avy-goto-line)
+         ) ; 推荐绑定 M-s
   :config
-  (setq avy-timeout-seconds 0.3)) ; 反应速度适配你的高性能 CPU
+  (setq avy-timeout-seconds 0.3)
+  :custom
+  ;; ① 关键：avy 默认键位是 QWERTY 主键行，改成 Colemak-DH 主键行
+  (avy-keys '(?a ?r ?s ?t ?g ?m ?n ?e ?i ?o))
+  (avy-style 'at-full)                    ; 候选标在词上，易读
+  (avy-background t)                      ; 变暗背景，只高亮候选（减少噪音）
+  (avy-all-windows t)                     ; 跨 frame 内所有窗口跳
+  (avy-case-fold-search t)
+  (avy-timeout-seconds 0.2)               ; 比你现在 0.3 更跟手
+  ) ; 反应速度适配你的高性能 CPU
 
 ;;; --- 增强搜索与跳转 (Consult) ---
 (use-package consult
@@ -289,12 +316,13 @@
   (setq consult-notes-file-dir-sources
         '(("task" ?t "~/org/task/")
           ("roam" ?n "~/org/roam/")
+          ("journal" ?j "~/org/journal/")
           ))
 
   :bind
-  ;; 2. 绑定快捷键方便调用
-  ;; (("C-c n f" . consult-notes)                    ; 选择源并搜索文件
-  ;;  ("C-c n s" . consult-notes-search-in-all-notes))
+  ;; 2. 绑定快捷键方便调用（C-c n f 已被 org-roam-node-find 占用，故用 / 与 s）
+  (("C-c n /" . consult-notes)                    ; 选择源并搜索文件
+   ("C-c n s" . consult-notes-search-in-all-notes))
   ) ; 所有源中搜索内容
 (use-package expand-region
   :ensure t  ;; 如果本地没有，自动通过 ELPA/MELPA 安装
@@ -312,7 +340,8 @@
 (use-package treesit-fold
   :ensure t
   :hook ((go-ts-mode python-ts-mode java-ts-mode js-ts-mode typescript-ts-mode
-          tsx-ts-mode lua-ts-mode css-ts-mode json-ts-mode bash-ts-mode)
+          tsx-ts-mode lua-ts-mode css-ts-mode json-ts-mode bash-ts-mode
+          rust-ts-mode)
          . treesit-fold-mode)
   :config
   ;; fringe 折叠指示箭头
@@ -363,6 +392,36 @@
   ;;  xs(setq racket-program "racket")
   )
 
+(use-package easysession
+  :ensure t
+  :demand t
+  :custom
+  ;; 每 10 分钟自动保存
+  (easysession-save-interval (* 10 60))
+
+  ;; 切换 Session 前自动保存当前 Session
+  (easysession-switch-to-save-session t)
+
+  ;; 启动时不自动加载上次 Session：恢复上百 buffer 会让每次新开卡 ~17s。
+  ;; 需要时用 C-c s l (easysession-switch-to) 手动切换。
+  (easysession-setup-load-session nil)
+
+  :config
+  ;; 手动切换 Session
+  (global-set-key (kbd "C-c s l") #'easysession-switch-to)
+
+  ;; 保存当前 Session
+  (global-set-key (kbd "C-c s s") #'easysession-save)
+
+  ;; 重命名 Session
+  (global-set-key (kbd "C-c s r") #'easysession-rename)
+
+  ;; 删除 Session
+  (global-set-key (kbd "C-c s d") #'easysession-delete)
+
+  ;; 初始化自动加载、定时保存和退出保存
+  (easysession-setup))
+
 ;; (use-package eglot
 ;;   :ensure nil ; Emacs 29+ 内置
 ;;   :hook (python-mode . eglot-ensure)
@@ -375,14 +434,19 @@
 ;;   ;; 配合 envrc，确保 eglot 启动前环境变量已就绪
 ;;   (add-hook 'eglot--managed-mode-hook
 ;;             (lambda () (when (fboundp 'envrc-mode) (envrc-mode 1)))))
+(use-package envrc
+  :ensure t
+  :hook (after-init . envrc-global-mode)
+  :custom (envrc-async nil))   ; Nix 首次 eval 别卡死 Emacs
 
-;; (use-package envrc
-
-;;   :hook (after-init . envrc-global-mode))
-
+(use-package minions
+  :ensure t
+  :config
+  (setq minions-mode-line-lighter " ·")                 ; 收起后的符号
+  (setq minions-prominent-modes '(meow-normal-mode))    ; 只直接显示 meow 状态
+  (minions-mode 1))
 
 (global-set-key (kbd "C-.") 'duplicate-line)
-
 
 (use-package rime
   :custom
@@ -431,7 +495,7 @@
 
 ;;; --- Org-mode 综合配置中心 ---
 ;; 先创建所需目录
-(dolist (dir '("~/org" "~/org/task" "~/org/roam"))
+(dolist (dir '("~/org" "~/org/task" "~/org/task/archive" "~/org/roam" "~/org/journal"))
   (let ((p (expand-file-name dir)))
     (unless (file-directory-p p)
       (make-directory p t)
@@ -449,14 +513,12 @@
   :ensure nil
   :bind (("C-c a" . org-agenda)
          ("C-c c" . org-capture)
-         ("C-c l" . org-store-link)
-	 ("C-c r" . my/org-refile-to-source-id-insert-at-top)
-	 )
+         ("C-c l" . org-store-link))
   :custom
   ;; 1. 多维管理与状态流
   (org-agenda-files '("~/org/todo.org"))
   (org-todo-keywords
-   '((sequence "TODO(t)" "NEXT(n!)" "DOING(i!)" "WAIT(w@/!)" "|" "DONE(d!)" "CANCELED(c@/!)")))
+   '((sequence "TODO(t!)" "NEXT(n!)" "DOING(i!)" "WAIT(w@/!)" "|" "DONE(d!)" "CANCELED(c@/!)")))
   
   ;; 2. 日志与计时管理
   (org-log-done 'time)
@@ -472,65 +534,52 @@
   :config
   ;; --- ID 与 链接系统 (加载 org-id 以支持回溯) ---
   (require 'org-id)
+  (require 'org-habit)
   (setq org-id-link-to-org-use-id 'create-if-interactive)
   (setq org-id-track-globally t)
+  ;; --- 笔记系统模块：同步 / 回写 / 计时 ---
+  (load (expand-file-name "my-org-notes.el" user-emacs-directory) nil t)
+  (setq org-id-extra-files
+        (append (directory-files-recursively
+                 (expand-file-name "~/org/task") "\\.org\\'")
+                (directory-files-recursively
+                 (expand-file-name "~/org/roam") "\\.org\\'")))
 
   ;; --- Capture 模板配置 ---
   (setq org-capture-templates
         '(("t" "todo" entry (file "~/org/todo.org")
-           "* TODO %:description\n  :PROPERTIES:\n  :SOURCE: %a\n  :CREATED: %U\n  :END:\n" 
-           :immediate-finish t :prepend t)
-	  ("n" "New task note" plain
-           (file (lambda ()
-                   (let* ((name (read-string "任务名称: "))
-                          (date-str (format-time-string "%Y-%m-%d"))
-                          (clean-name (replace-regexp-in-string
-                                       "[^a-zA-Z0-9\u4e00-\u9fa5-]" ""
-                                       (replace-regexp-in-string " " "-" name))))
-                     (expand-file-name
-                      (concat date-str "-" clean-name ".org")
-                      "~/org/task/"))))
-           "#+DATE: %U\n\n* %?")
-	  ))  ;; --- 自动化函数组：状态变更触发器 ---
+           "* TODO %?\n  :PROPERTIES:\n  :CREATED: %U\n  :END:\n"
+            :prepend t)
+          ("i" "inspiration" entry (file "~/org/inbox.org")
+           "* %?\n  :PROPERTIES:\n  :CREATED: %U\n  :END:\n"
+           :prepend t)
+          ("j" "journal" entry
+           (file+olp+datetree (lambda () (format-time-string "~/org/journal/%Y-%m.org")))
+           "* %<%H:%M> 每日复盘\n- 今天推进了：%?\n- 卡点在：\n- 明天第一件事：\n"
+           :tree-type week :unnarrowed t)
+          ("n" "New task note" plain
+           (file (lambda () (my/org-task-capture-file)))
+           "#+TITLE: %?\n:PROPERTIES:\n:ID: %(org-id-new)\n:创建时间: %U\n:END:\n\n* 交付物\n\n* 要解决的问题\n\n* 行动清单\n\n* 动态日志\n\n* 参考资料与知识链接\n"
+           :unnarrowed t)))
+  ;; --- 自动化函数组：状态变更触发器 ---
   (defun my-org-todo-automation-h ()
-    "整合：NEXT 自动排程 + DOING 自动计时"
-    (cond 
-     ((string= org-state "NEXT") (org-schedule nil))
-     ((string= org-state "DOING") (org-clock-in))
-     ((and (not (string= org-state "DOING")) (org-clocking-p)) (org-clock-out))))
+    "NEXT 自动排程 + DOING 自动计时。"
+    (unless my/org-sync-inhibit
+      (cond
+       ((string= org-state "NEXT")
+        (org-schedule nil)
+        (when (org-clocking-p)
+          (let ((org-clock-out-switch-to-state nil))
+     (org-clock-out))))
+       ((string= org-state "DOING")
+        (org-clock-in))
+       ((and (not (string= org-state "DOING")) (org-clocking-p))
+        (let ((org-clock-out-switch-to-state nil))
+          (org-clock-out))))))
 
   (add-hook 'org-after-todo-state-change-hook #'my-org-todo-automation-h)
 
-  ;; --- 自定义功能：任务归并 (Refile to Source ID) ---
-  (defun my/org-refile-to-source-id-insert-at-top ()
-    "将任务内容插入至源笔记 ID 标题的正下方，并删除目标处的 ID。"
-    (interactive)
-    (let* ((source (org-entry-get nil "SOURCE"))
-           (id (when (and source (string-match "id:\\([a-z0-9-]+\\)" source))
-                 (match-string 1 source))))
-      (if (not id)
-          (user-error "没有有效的 SOURCE ID")
-        (let ((m (org-id-find id)))
-          (if (not m)
-              (user-error "找不到目标 ID %s" id)
-            (let* ((target-file (car m))
-                   (target-pos (cdr m))
-                   (entry-text (save-excursion
-                                 (org-back-to-heading t)
-                                 (let ((beg (save-excursion (forward-line 1) (point)))
-                                       (end (org-end-of-subtree t t)))
-                                   (buffer-substring-no-properties beg end)))))
-              (with-current-buffer (find-file-noselect target-file)
-                (save-excursion
-                  (goto-char target-pos)
-                  (org-back-to-heading t)
-                  (org-delete-property "ID")
-                  (end-of-line)
-                  (insert "\n" entry-text)
-                  (unless (bolp) (insert "\n"))
-                  (save-buffer)))
-              (org-cut-subtree)
-              (message "内容已归并，ID 已清理。")))))))
+  ;; --- C-c r 已下线：原『归并到 SOURCE』命令与 SOURCE 键冲突，改由投影统一维护 ---
   )
 
 (use-package ox-gfm
@@ -558,8 +607,21 @@
   :custom
   (org-roam-directory (file-truename "~/org/roam"))
   (org-roam-capture-templates
-   '(("d" "default" plain "%?"
-      :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+   '(("d" "card" plain "%?"
+      :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                         ":PROPERTIES:\n:ID: %(org-id-new)\n:创建: %U\n:来源: \n:END:\n#+title: ${title}\n#+FILETAGS: :card:\n\n* 相关概念\n\n* 来源与上下文\n\n* 被以下项目使用\n\n* 思考与行动启发\n")
+      :unnarrowed t)
+     ("h" "MOC" plain "%?"
+      :target (file+head "MOC-%<%Y%m%d%H%M%S>-${slug}.org"
+                         ":PROPERTIES:\n:ID: %(org-id-new)\n:创建: %U\n:END:\n#+title: ${title}\n#+FILETAGS: :MOC:\n\n* 核心概念\n\n* 流程与方法\n\n* 待探索\n")
+      :unnarrowed t)
+     ("s" "SOP" plain "%?"
+      :target (file+head "SOP-%<%Y%m%d%H%M%S>-${slug}.org"
+                         ":PROPERTIES:\n:ID: %(org-id-new)\n:创建: %U\n:END:\n#+title: ${title}\n#+FILETAGS: :sop:\n\n* 适用场景\n\n* 步骤\n\n* 检查清单\n")
+      :unnarrowed t)
+     ("p" "pitfall" plain "%?"
+      :target (file+head "PITFALL-%<%Y%m%d%H%M%S>-${slug}.org"
+                         ":PROPERTIES:\n:ID: %(org-id-new)\n:创建: %U\n:END:\n#+title: ${title}\n#+FILETAGS: :pitfall:\n\n* 现象\n\n* 原因\n\n* 解法\n")
       :unnarrowed t)))
   :bind (("C-c n f" . org-roam-node-find)
          ("C-c n g" . org-roam-graph)
@@ -609,109 +671,12 @@
 
 (global-set-key (kbd "C-x p t") #'my/project-switch-in-tab)
 
-;; (defun my/get-pyright-path ()
-;;   "从 direnv 环境中获取 pyright 路径"
-;;   (let* ((default-directory (locate-dominating-file default-directory ".envrc")))
-;;     (when default-directory
-;;       (string-trim
-;;        (shell-command-to-string
-;;         "direnv exec . which pyright 2>/dev/null")))))
 
-;; (with-eval-after-load 'eglot
-;;   (add-to-list 'eglot-server-programs
-;;                '(python-mode . (lambda ()
-;;                                  (let ((pyright-path (my/get-pyright-path)))
-;;                                    (if pyright-path
-;;                                        (list pyright-path)
-;;                                      '("pyright")))))))
+;; meow 配置已抽到 my-meow.el
+(load (expand-file-name "my-meow.el" user-emacs-directory) nil t)
 
-;; meow 配置
-
-
-(use-package meow
-  :ensure t
-  :config
-  (defun meow-setup ()
-    (setq meow-cheatsheet-layout meow-cheatsheet-layout-colemak-dh)
-    (meow-motion-define-key
-     ;; Use e to move up, n to move down.
-     ;; Since special modes usually use n to move down, we only overwrite e here.
-     '("e" . meow-prev)
-     '("<escape>" . ignore))
-    (meow-leader-define-key
-     '("?" . meow-cheatsheet)
-     '("1" . meow-digit-argument)
-     '("2" . meow-digit-argument)
-     '("3" . meow-digit-argument)
-     '("4" . meow-digit-argument)
-     '("5" . meow-digit-argument)
-     '("6" . meow-digit-argument)
-     '("7" . meow-digit-argument)
-     '("8" . meow-digit-argument)
-     '("9" . meow-digit-argument)
-     '("0" . meow-digit-argument))
-    (meow-normal-define-key
-     '("0" . meow-expand-0)
-     '("1" . meow-expand-1)
-     '("2" . meow-expand-2)
-     '("3" . meow-expand-3)
-     '("4" . meow-expand-4)
-     '("5" . meow-expand-5)
-     '("6" . meow-expand-6)
-     '("7" . meow-expand-7)
-     '("8" . meow-expand-8)
-     '("9" . meow-expand-9)
-     '("-" . negative-argument)
-     '(";" . meow-reverse)
-     '("," . meow-inner-of-thing)
-     '("." . meow-bounds-of-thing)
-     '("[" . meow-beginning-of-thing)
-     '("]" . meow-end-of-thing)
-     '("/" . meow-visit)
-     '("a" . meow-append)
-     '("A" . meow-open-below)
-     '("b" . meow-back-word)
-     '("B" . meow-back-symbol)
-     '("c" . meow-change)
-     '("e" . meow-prev)
-     '("E" . meow-prev-expand)
-     '("f" . meow-find)
-     '("g" . meow-cancel-selection)
-     '("G" . meow-grab)
-     '("m" . meow-left)
-     '("M" . meow-left-expand)
-     '("i" . meow-right)
-     '("I" . meow-right-expand)
-     '("j" . meow-join)
-     '("k" . meow-kill)
-     '("l" . meow-line)
-     '("L" . meow-goto-line)
-     '("h" . meow-mark-word)
-     '("H" . meow-mark-symbol)
-     '("n" . meow-next)
-     '("N" . meow-next-expand)
-     '("o" . meow-block)
-     '("O" . meow-to-block)
-     '("p" . meow-yank)
-     '("q" . meow-quit)
-     '("r" . meow-replace)
-     '("s" . meow-insert)
-     '("S" . meow-open-above)
-     '("t" . meow-till)
-     '("u" . meow-undo)
-     '("U" . meow-undo-in-selection)
-     '("v" . meow-search)
-     '("w" . meow-next-word)
-     '("W" . meow-next-symbol)
-     '("x" . meow-delete)
-     '("X" . meow-backward-delete)
-     '("y" . meow-save)
-     '("z" . meow-pop-selection)
-     '("'" . repeat)
-     '("<escape>" . ignore)))
-  )
-(meow-setup)
-(meow-global-mode 1)
+;; ETAF 应用（Markdown 预览）配置在 my-etaf.el
+(load (expand-file-name "my-etaf.el" user-emacs-directory) nil t)
 
 ;;; --- VCS / AI：magit + vc-jj + majutsu + agent-shell ---
 
@@ -746,19 +711,50 @@
             (recursive-edit))
         (remove-hook 'ediff-quit-hook #'majutsu-ediff--exit-recursive-edit))))
   (advice-add 'majutsu-ediff-merge-files :override #'my/majutsu-ediff-merge-files))
+
 (use-package agent-shell
   :ensure t
   :commands (agent-shell-opencode-start-agent)
-  :bind ("C-c C-a" . agent-shell-opencode-start-agent)
+  :bind ("C-c C-o" . agent-shell-opencode-start-agent)
   :config
-  (setq agent-shell-opencode-environment
-      (agent-shell-make-environment-variables
-       "LD_LIBRARY_PATH"
-       (concat "/run/current-system/sw/share/nix-ld/lib"
-               (if (getenv "LD_LIBRARY_PATH")
-                   (concat ":" (getenv "LD_LIBRARY_PATH"))
-                 ""))))
+  ;; 指向 opencode v2（llm-agents.nix 提供的 opencode2，与 v1 的 opencode 并存）
+  (setq agent-shell-opencode-acp-command
+        '("/etc/profiles/per-user/zjw/bin/opencode2" "acp"))
   )
+
+(use-package dirvish
+  :ensure t
+  :init (dirvish-override-dired-mode)
+  :bind ("C-c d" . dirvish-side)
+  :config
+  (define-key dirvish-mode-map (kbd "?") #'dirvish-dispatch)
+  (define-key dirvish-mode-map (kbd "TAB") #'dirvish-subtree-toggle)
+  ;; 用 ls -A（--almost-all）隐藏 . 和 ..，其他隐藏文件照常显示。
+  ;; 若想连 .git/.env 也藏起来，改用 dired-omit-mode + dired-omit-files。
+  (setq dired-listing-switches "-Alh --group-directories-first")
+  )
+
+;;; --- 终端与服务面板 ---
+;; vterm：Emacs 内的完整终端（process-compose TUI、htop 等）
+(use-package vterm
+  :bind ("C-c v" . vterm)
+  :config
+  ;; 默认 shell 用 zsh（NixOS 下的绝对路径，executable-find 兜底）
+  (setq vterm-shell (or (executable-find "zsh") vterm-shell))
+  ;; 让 .zshrc 跳过 zellij 自动启动
+  (setq vterm-environment (append '("EMACS_VTERM=1") vterm-environment))
+  (defun my/vterm-new (name)
+    "Open a new vterm buffer named NAME."
+    (interactive "sName: ")
+    (let ((vterm-buffer-name (format "*vterm:%s*" name)))
+      (vterm))))
+
+;; prodigy：服务面板；每个项目组一个 process-compose 服务
+(use-package prodigy
+  :ensure t
+  :bind ("C-c P" . prodigy)
+  :config
+  (load (expand-file-name "my-prodigy.el" user-emacs-directory) nil t))
 
 ;; 按仓库类型自动分派：有 .jj 用 majutsu，纯 git 用 magit
 (defun my/vcs-status ()
